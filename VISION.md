@@ -40,7 +40,7 @@ Protocol adapters can forward user messages and credentials. The spec should
 make authentication, error handling, and streaming behavior explicit so
 implementations do not invent unsafe defaults.
 
-## What We Will Not Merge For Now
+## What We Will Not Merge (For Now)
 
 - Production server claims that still point to placeholders
 - Auth behavior without schema coverage
