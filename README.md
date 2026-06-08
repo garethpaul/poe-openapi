@@ -71,4 +71,4 @@ Keep changes small and tied to the project that is already present in this repos
 
 Prior README summary:
 
-> Poe Protocol <!-- README-OVERVIEW-IMAGE --> API Documentation For detailed API specifications, please refer to the following documents: - **OpenAPI Specification (YAML)**: [spec.yaml](spec.yaml) - **OpenAPI Specification (Markdown)**: [spec.md](spec.md) These documents provide comprehensive details about the API endpoints, request and response formats, authentication methods, and error handling.
+> Poe Protocol API Documentation For detailed API specifications, please refer to the following documents: - **OpenAPI Specification (YAML)**: [spec.yaml](spec.yaml) - **OpenAPI Specification (Markdown)**: [spec.md](spec.md) These documents provide comprehensive details about the API endpoints, request and response formats, authentication methods, and error handling.
