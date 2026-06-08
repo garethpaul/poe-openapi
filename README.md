@@ -1,5 +1,8 @@
 # Poe Protocol 
 
+<!-- README-OVERVIEW-IMAGE -->
+![Project overview](docs/readme-overview.svg)
+
 ## API Documentation
 
 For detailed API specifications, please refer to the following documents:
