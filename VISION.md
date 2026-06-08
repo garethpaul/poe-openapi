@@ -1,0 +1,48 @@
+## Poe OpenAPI Vision
+
+Poe OpenAPI is an OpenAPI specification and Markdown reference for an adapter
+that converts between Server-Sent Events streams and Poe Protocol request and
+response shapes.
+
+The repository is useful as a contract-first description of endpoints,
+authentication, request schemas, response streams, and error payloads for a Poe
+Protocol bridge.
+
+The goal is to keep the spec internally consistent and clear about which parts
+are examples versus deployable service details.
+
+The current focus is:
+
+Priority:
+
+- Preserve `spec.yaml` as the source API contract
+- Keep `spec.md` aligned with the YAML specification
+- Make placeholder servers and support contacts obvious
+- Keep authentication schemes and streaming response formats explicit
+
+Next priorities:
+
+- Add generation steps for producing Markdown from the YAML spec
+- Replace example hostnames only when a real deployment exists
+- Validate the OpenAPI document in CI
+- Add example request and response fixtures for each endpoint
+
+Contribution rules:
+
+- One PR = one focused endpoint, schema, auth, example, or docs change.
+- Update both YAML and Markdown outputs together.
+- Do not claim production availability without a real server.
+- Keep protocol examples minimal and machine-checkable.
+
+## Security And Responsible Use
+
+Protocol adapters can forward user messages and credentials. The spec should
+make authentication, error handling, and streaming behavior explicit so
+implementations do not invent unsafe defaults.
+
+## What We Will Not Merge For Now
+
+- Production server claims that still point to placeholders
+- Auth behavior without schema coverage
+- Hand-edited Markdown that diverges from the OpenAPI source
+- Ambiguous proxying or forwarding semantics
