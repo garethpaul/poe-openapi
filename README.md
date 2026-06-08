@@ -49,7 +49,9 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 ## Testing and Verification
 
 - Run `make verify` before committing OpenAPI or reference documentation changes.
-- The verification gate parses `spec.yaml` and checks endpoint, operation ID, security scheme, and shared error-response coverage against `spec.md`.
+- The verification gate parses `spec.yaml` and checks endpoint, operation ID,
+  required request-field documentation, security scheme, and shared
+  error-response coverage against `spec.md`.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
 
@@ -68,6 +70,9 @@ When the required SDK or runtime is unavailable, use static checks and source re
 
 - See `SECURITY.md` for vulnerability reporting and safe research guidance.
 - See `VISION.md` for project direction and contribution guardrails.
+- See `CHANGES.md` for maintenance history.
+- See `plans/2026-06-08-request-field-reference-validation.md` for the current
+  request-field documentation guard.
 
 ## Contributing
 

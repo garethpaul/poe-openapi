@@ -8,12 +8,16 @@ reference = File.read('spec.md')
 errors = []
 
 documented_operations = {}
+documented_sections = {}
 reference.split(/^### \d+\. /).drop(1).each do |section|
   endpoint = section[/^- \*\*Endpoint\*\*: `([^`]+)`/, 1]
   method = section[/^- \*\*Method\*\*: `([^`]+)`/, 1]
   operation_id = section[/^- \*\*Operation ID\*\*: `([^`]+)`/, 1]
 
-  documented_operations[[endpoint, method]] = operation_id if endpoint && method
+  next unless endpoint && method
+
+  documented_operations[[endpoint, method]] = operation_id
+  documented_sections[[endpoint, method]] = section
 end
 
 unless spec.fetch('openapi', '').to_s.start_with?('3.')
@@ -21,7 +25,9 @@ unless spec.fetch('openapi', '').to_s.start_with?('3.')
 end
 
 paths = spec.fetch('paths', {})
-security_schemes = spec.fetch('components', {}).fetch('securitySchemes', {})
+components = spec.fetch('components', {})
+schemas = components.fetch('schemas', {})
+security_schemes = components.fetch('securitySchemes', {})
 operation_ids = []
 
 paths.each do |path, methods|
@@ -37,6 +43,26 @@ paths.each do |path, methods|
       errors << "spec.md missing endpoint/method section for #{method_name} #{path}"
     elsif documented_operation_id != operation_id
       errors << "spec.md missing operation ID entry for #{method_name} #{path}: #{operation_id}"
+    end
+
+    request_schema_ref = operation.dig('requestBody', 'content', 'application/json', 'schema', '$ref')
+    if request_schema_ref
+      unless request_schema_ref.start_with?('#/components/schemas/')
+        errors << "#{method_name} #{path} requestBody should use a component schema"
+        next
+      end
+
+      schema_name = request_schema_ref.delete_prefix('#/components/schemas/')
+      schema = schemas.fetch(schema_name, {})
+      documented_section = documented_sections.fetch([path, method_name], '')
+
+      Array(schema['required']).each do |field|
+        next if documented_section.match?(/`#{Regexp.escape(field)}`/)
+
+        errors << "spec.md request body for #{method_name} #{path} missing required field `#{field}`"
+      end
+    elsif operation['requestBody']
+      errors << "#{method_name} #{path} requestBody should use a component schema"
     end
 
     Array(operation['security']).each do |security_requirement|
