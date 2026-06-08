@@ -1,5 +1,8 @@
 # poe-openapi
 
+<!-- README-OVERVIEW-IMAGE -->
+![Project overview](docs/readme-overview.svg)
+
 ## Overview
 
 `garethpaul/poe-openapi` is a public sample, documentation, or utility project. OpenAPI Spec for Poe Protocol
@@ -69,4 +72,3 @@ Keep changes small and tied to the project that is already present in this repos
 Prior README summary:
 
 > Poe Protocol <!-- README-OVERVIEW-IMAGE --> API Documentation For detailed API specifications, please refer to the following documents: - **OpenAPI Specification (YAML)**: [spec.yaml](spec.yaml) - **OpenAPI Specification (Markdown)**: [spec.md](spec.md) These documents provide comprehensive details about the API endpoints, request and response formats, authentication methods, and error handling.
-
