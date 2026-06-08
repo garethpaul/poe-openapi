@@ -36,6 +36,11 @@ Contribution rules:
 
 ## Security And Responsible Use
 
+Canonical security policy and reporting:
+
+- [`SECURITY.md`](SECURITY.md)
+
+
 Protocol adapters can forward user messages and credentials. The spec should
 make authentication, error handling, and streaming behavior explicit so
 implementations do not invent unsafe defaults.
