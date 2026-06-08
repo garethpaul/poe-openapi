@@ -12,21 +12,25 @@ This README is based on the checked-in source, manifests, scripts, and repositor
 ## Repository Contents
 
 - `README.md` - project overview and local usage notes
+- `CHANGES.md` - notable maintenance changes
+- `Makefile` - local verification entry points
 - `SECURITY.md` - security reporting and disclosure guidance
+- `scripts` - deterministic OpenAPI validation checks
 - `VISION.md` - project direction and maintenance guardrails
 
 Additional scan context:
 
-- Source directories: no top-level source directories detected
-- Dependency and build manifests: none detected
-- Entry points or build surfaces: none detected
-- Test-looking files: spec.md, spec.yaml
+- Source directories: scripts
+- Dependency and build manifests: Makefile
+- Entry points or build surfaces: Makefile, spec.md, spec.yaml
+- Test-looking files: scripts/validate-openapi.rb, spec.md, spec.yaml
 
 ## Getting Started
 
 ### Prerequisites
 
 - Git
+- Ruby and `make`
 
 ### Setup
 
@@ -39,11 +43,13 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 
 ## Running or Using the Project
 
-- No single runtime entry point was identified. Start by reading the source files and manifests listed above.
+- Read `spec.yaml` as the source OpenAPI contract.
+- Read `spec.md` as the human-oriented endpoint reference.
 
 ## Testing and Verification
 
-- No dedicated automated test command was identified from the checked-in files. Verify changes by running the relevant build or manually exercising the sample.
+- Run `make verify` before committing OpenAPI or reference documentation changes.
+- The verification gate parses `spec.yaml` and checks endpoint, operation ID, security scheme, and shared error-response coverage against `spec.md`.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
 

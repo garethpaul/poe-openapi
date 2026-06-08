@@ -21,6 +21,7 @@ The SSE to Poe Protocol Adapter API acts as a bridge between Server-Sent Events 
 
 - **Endpoint**: `/stream-to-poe`
 - **Method**: `POST`
+- **Operation ID**: `convertSseToPoe`
 - **Description**: Converts an SSE stream URL into the Poe Protocol format.
 - **Request Body**:
   - `sseUrl` (string, required): URL of the SSE stream to convert.
@@ -39,6 +40,7 @@ The SSE to Poe Protocol Adapter API acts as a bridge between Server-Sent Events 
 
 - **Endpoint**: `/poe-to-stream`
 - **Method**: `POST`
+- **Operation ID**: `convertPoeToSse`
 - **Description**: Converts Poe Protocol messages into SSE streams.
 - **Request Body**:
   - `content` (string, required): Content to convert to an SSE stream.
@@ -56,6 +58,7 @@ The SSE to Poe Protocol Adapter API acts as a bridge between Server-Sent Events 
 
 - **Endpoint**: `/poe/query`
 - **Method**: `POST`
+- **Operation ID**: `handlePoeQuery`
 - **Description**: Processes Poe query requests according to the Poe Protocol.
 - **Request Body**: 
   - `version`, `type`, `query`, `message_id`, `user_id`, `conversation_id` (all required).
@@ -70,6 +73,7 @@ The SSE to Poe Protocol Adapter API acts as a bridge between Server-Sent Events 
 
 - **Endpoint**: `/poe/settings`
 - **Method**: `POST`
+- **Operation ID**: `handlePoeSettings`
 - **Description**: Returns bot settings according to the Poe Protocol.
 - **Request Body**: 
   - `version`, `type` (both required).
@@ -84,6 +88,7 @@ The SSE to Poe Protocol Adapter API acts as a bridge between Server-Sent Events 
 
 - **Endpoint**: `/poe/report-reaction`
 - **Method**: `POST`
+- **Operation ID**: `handlePoeReactionReport`
 - **Description**: Accepts reports of user reactions to bot messages.
 - **Request Body**: 
   - `version`, `type`, `message_id`, `user_id`, `conversation_id`, `reaction` (all required).
@@ -98,6 +103,7 @@ The SSE to Poe Protocol Adapter API acts as a bridge between Server-Sent Events 
 
 - **Endpoint**: `/poe/report-error`
 - **Method**: `POST`
+- **Operation ID**: `handlePoeErrorReport`
 - **Description**: Accepts error reports from Poe.
 - **Request Body**: 
   - `version`, `type`, `message` (all required).

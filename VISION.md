@@ -17,6 +17,7 @@ Priority:
 
 - Preserve `spec.yaml` as the source API contract
 - Keep `spec.md` aligned with the YAML specification
+- Maintain `make verify` as the local OpenAPI consistency gate
 - Make placeholder servers and support contacts obvious
 - Keep authentication schemes and streaming response formats explicit
 
@@ -24,7 +25,7 @@ Next priorities:
 
 - Add generation steps for producing Markdown from the YAML spec
 - Replace example hostnames only when a real deployment exists
-- Validate the OpenAPI document in CI
+- Add CI that runs the local OpenAPI validator
 - Add example request and response fixtures for each endpoint
 
 Contribution rules:
