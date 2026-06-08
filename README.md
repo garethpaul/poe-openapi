@@ -48,7 +48,7 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 
 ## Testing and Verification
 
-- Run `make verify` before committing OpenAPI or reference documentation changes.
+- Run `make check` or `make verify` before committing OpenAPI or reference documentation changes.
 - The verification gate parses `spec.yaml` and checks endpoint, operation ID,
   required request-field documentation, security scheme, and shared
   error-response coverage against `spec.md`.

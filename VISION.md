@@ -17,7 +17,7 @@ Priority:
 
 - Preserve `spec.yaml` as the source API contract
 - Keep `spec.md` aligned with the YAML specification
-- Maintain `make verify` as the local OpenAPI consistency gate
+- Maintain `make check` and `make verify` as the local OpenAPI consistency gates
 - Preserve required request-field documentation in the Markdown reference
 - Make placeholder servers and support contacts obvious
 - Keep authentication schemes and streaming response formats explicit
