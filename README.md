@@ -15,6 +15,7 @@ This README is based on the checked-in source, manifests, scripts, and repositor
 - `CHANGES.md` - notable maintenance changes
 - `Makefile` - local verification entry points
 - `SECURITY.md` - security reporting and disclosure guidance
+- `docs/plans` - completed engineering plans and verification records
 - `scripts` - deterministic OpenAPI validation checks
 - `VISION.md` - project direction and maintenance guardrails
 
@@ -52,6 +53,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 - The verification gate parses `spec.yaml` and checks endpoint, operation ID,
   required request-field documentation, security scheme, and shared
   error-response coverage against `spec.md`.
+- Example `example.com` servers must stay explicitly marked as placeholders in
+  both the YAML and Markdown reference.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
 
@@ -71,6 +74,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - See `SECURITY.md` for vulnerability reporting and safe research guidance.
 - See `VISION.md` for project direction and contribution guardrails.
 - See `CHANGES.md` for maintenance history.
+- See `docs/plans/2026-06-08-placeholder-server-validation.md` for the current
+  canonical completed engineering plan.
 - See `plans/2026-06-08-request-field-reference-validation.md` for the current
   request-field documentation guard.
 

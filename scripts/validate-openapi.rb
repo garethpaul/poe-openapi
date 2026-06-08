@@ -3,6 +3,8 @@
 
 require 'yaml'
 
+PLAN = 'docs/plans/2026-06-08-placeholder-server-validation.md'
+
 spec = YAML.safe_load(File.read('spec.yaml'), aliases: true)
 reference = File.read('spec.md')
 errors = []
@@ -29,6 +31,29 @@ components = spec.fetch('components', {})
 schemas = components.fetch('schemas', {})
 security_schemes = components.fetch('securitySchemes', {})
 operation_ids = []
+
+unless File.file?(PLAN)
+  errors << "#{PLAN} must document the completed placeholder-server validation plan"
+else
+  plan = File.read(PLAN)
+  errors << "#{PLAN} must be marked completed" unless plan.match?(/^## Status\s+Completed/m)
+  errors << "#{PLAN} must record make check verification" unless plan.include?('make check')
+end
+
+Array(spec.fetch('servers', [])).each do |server|
+  url = server.fetch('url', '').to_s
+  description = server.fetch('description', '').to_s
+  next unless url.include?('example.com')
+
+  unless description.downcase.include?('placeholder')
+    errors << "example.com server #{url} must be described as a placeholder in spec.yaml"
+  end
+
+  reference_line = reference.lines.find { |line| line.include?(url) }
+  unless reference_line&.downcase&.include?('placeholder')
+    errors << "example.com server #{url} must be described as a placeholder in spec.md"
+  end
+end
 
 paths.each do |path, methods|
   methods.each do |method, operation|

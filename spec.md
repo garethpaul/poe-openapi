@@ -12,8 +12,8 @@ The SSE to Poe Protocol Adapter API acts as a bridge between Server-Sent Events 
 
 ## Servers
 
-- **Production Server**: `https://api.example.com/v1`
-- **Development Server**: `https://api-dev.example.com/v1`
+- **Example production placeholder server**: `https://api.example.com/v1`
+- **Example development placeholder server**: `https://api-dev.example.com/v1`
 
 ## Endpoints
 

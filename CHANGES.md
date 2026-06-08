@@ -2,6 +2,8 @@
 
 ## 2026-06-08
 
+- Added canonical `docs/plans` coverage and placeholder-server validation so
+  example hosts cannot be presented as real production endpoints.
 - Added request-field reference validation so required OpenAPI request fields
   must stay documented in `spec.md`.
 - Added `make check` as an alias for the existing OpenAPI verification gate.

@@ -16,9 +16,9 @@ info:
 
 servers:
   - url: https://api.example.com/v1
-    description: Production server
+    description: Example production placeholder server
   - url: https://api-dev.example.com/v1
-    description: Development server
+    description: Example development placeholder server
 
 paths:
   /stream-to-poe:

@@ -20,6 +20,8 @@ Priority:
 - Maintain `make check` and `make verify` as the local OpenAPI consistency gates
 - Preserve required request-field documentation in the Markdown reference
 - Make placeholder servers and support contacts obvious
+- Require `example.com` servers to be labeled as placeholders in YAML and
+  Markdown
 - Keep authentication schemes and streaming response formats explicit
 
 Next priorities:
