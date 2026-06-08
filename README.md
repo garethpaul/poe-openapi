@@ -66,9 +66,3 @@ When the required SDK or runtime is unavailable, use static checks and source re
 ## Contributing
 
 Keep changes small and tied to the project that is already present in this repository. For code changes, document the toolchain used, avoid committing generated dependency directories or local configuration, and update this README when setup or verification steps change.
-
-## Existing Project Notes
-
-Prior README summary:
-
-> Poe Protocol API Documentation For detailed API specifications, please refer to the following documents: - **OpenAPI Specification (YAML)**: [spec.yaml](spec.yaml) - **OpenAPI Specification (Markdown)**: [spec.md](spec.md) These documents provide comprehensive details about the API endpoints, request and response formats, authentication methods, and error handling.
