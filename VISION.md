@@ -46,3 +46,6 @@ implementations do not invent unsafe defaults.
 - Auth behavior without schema coverage
 - Hand-edited Markdown that diverges from the OpenAPI source
 - Ambiguous proxying or forwarding semantics
+
+This list is a roadmap guardrail, not a permanent rule.
+Strong user demand and strong technical rationale can change it.
