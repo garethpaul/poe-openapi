@@ -51,7 +51,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 
 - Run `make check` or `make verify` before committing OpenAPI or reference documentation changes.
 - The verification gate parses `spec.yaml` and checks endpoint, operation ID,
-  required request-field documentation, security scheme, and shared
+  required request-field documentation, response status documentation,
+  security scheme, and shared
   error-response coverage against `spec.md`.
 - Example `example.com` servers must stay explicitly marked as placeholders in
   both the YAML and Markdown reference.
@@ -76,6 +77,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - See `CHANGES.md` for maintenance history.
 - See `docs/plans/2026-06-08-placeholder-server-validation.md` for the current
   canonical completed engineering plan.
+- See `docs/plans/2026-06-08-response-status-reference-validation.md` for the
+  response-status reference guard.
 - See `plans/2026-06-08-request-field-reference-validation.md` for the current
   request-field documentation guard.
 

@@ -3,7 +3,10 @@
 
 require 'yaml'
 
-PLAN = 'docs/plans/2026-06-08-placeholder-server-validation.md'
+PLANS = [
+  'docs/plans/2026-06-08-placeholder-server-validation.md',
+  'docs/plans/2026-06-08-response-status-reference-validation.md'
+].freeze
 
 spec = YAML.safe_load(File.read('spec.yaml'), aliases: true)
 reference = File.read('spec.md')
@@ -11,6 +14,7 @@ errors = []
 
 documented_operations = {}
 documented_sections = {}
+documented_responses = {}
 reference.split(/^### \d+\. /).drop(1).each do |section|
   endpoint = section[/^- \*\*Endpoint\*\*: `([^`]+)`/, 1]
   method = section[/^- \*\*Method\*\*: `([^`]+)`/, 1]
@@ -20,6 +24,7 @@ reference.split(/^### \d+\. /).drop(1).each do |section|
 
   documented_operations[[endpoint, method]] = operation_id
   documented_sections[[endpoint, method]] = section
+  documented_responses[[endpoint, method]] = section.scan(/^\s+- `(\d{3})`:/).flatten
 end
 
 unless spec.fetch('openapi', '').to_s.start_with?('3.')
@@ -32,12 +37,15 @@ schemas = components.fetch('schemas', {})
 security_schemes = components.fetch('securitySchemes', {})
 operation_ids = []
 
-unless File.file?(PLAN)
-  errors << "#{PLAN} must document the completed placeholder-server validation plan"
-else
-  plan = File.read(PLAN)
-  errors << "#{PLAN} must be marked completed" unless plan.match?(/^## Status\s+Completed/m)
-  errors << "#{PLAN} must record make check verification" unless plan.include?('make check')
+PLANS.each do |plan_path|
+  unless File.file?(plan_path)
+    errors << "#{plan_path} must document the completed validation plan"
+    next
+  end
+
+  plan = File.read(plan_path)
+  errors << "#{plan_path} must be marked completed" unless plan.match?(/^## Status\s+Completed/m)
+  errors << "#{plan_path} must record make check verification" unless plan.include?('make check')
 end
 
 Array(spec.fetch('servers', [])).each do |server|
@@ -97,6 +105,22 @@ paths.each do |path, methods|
     end
 
     responses = operation.fetch('responses', {})
+    response_statuses = responses.keys.map(&:to_s)
+    documented_statuses = documented_responses.fetch([path, method_name], [])
+
+    documented_duplicates = documented_statuses.tally.select { |_status, count| count > 1 }.keys
+    unless documented_duplicates.empty?
+      errors << "spec.md response list for #{method_name} #{path} duplicates #{documented_duplicates.join(', ')}"
+    end
+
+    (response_statuses - documented_statuses).each do |status|
+      errors << "spec.md response list for #{method_name} #{path} missing #{status}"
+    end
+
+    (documented_statuses - response_statuses).each do |status|
+      errors << "spec.md response list for #{method_name} #{path} documents unknown #{status}"
+    end
+
     %w[200 400 401 500].each do |status|
       errors << "#{method_name} #{path} missing #{status} response" unless responses.key?(status)
     end

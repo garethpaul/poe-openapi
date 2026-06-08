@@ -2,6 +2,8 @@
 
 ## 2026-06-08
 
+- Added response-status reference validation so `spec.md` cannot omit, duplicate,
+  or retain stale response codes for OpenAPI operations.
 - Added canonical `docs/plans` coverage and placeholder-server validation so
   example hosts cannot be presented as real production endpoints.
 - Added request-field reference validation so required OpenAPI request fields
