@@ -242,6 +242,7 @@ paths:
                 properties:
                   status:
                     type: string
+                    description: Acknowledgement status for the reaction report
                     example: "received"
         '400':
           description: Invalid request
@@ -286,6 +287,7 @@ paths:
                 properties:
                   status:
                     type: string
+                    description: Acknowledgement status for the error report
                     example: "received"
         '400':
           description: Invalid request
@@ -424,9 +426,11 @@ components:
                 description: The time the message was sent, in microseconds since the Unix epoch
                 example: 1678299819427621
               message_id:
+                description: Identifier of the message in the conversation, when present
                 $ref: '#/components/schemas/Identifier'
               feedback:
                 type: array
+                description: Feedback entries previously recorded for the message
                 items:
                   type: object
                   required:
@@ -437,12 +441,15 @@ components:
                       enum:
                         - like
                         - dislike
+                      description: Feedback sentiment for the message
                       example: "like"
                     reason:
                       type: string
+                      description: Optional reason supplied with the feedback
                       example: "Helpful answer"
               attachments:
                 type: array
+                description: Files attached to the message
                 items:
                   type: object
                   required:
@@ -453,27 +460,35 @@ components:
                     url:
                       type: string
                       format: uri
+                      description: URL where the attachment can be retrieved
                       example: "https://example.com/files/image.png"
                     content_type:
                       type: string
+                      description: MIME type of the attachment
                       example: "image/png"
                     name:
                       type: string
+                      description: Original attachment filename
                       example: "image.png"
                     parsed_content:
                       type: string
+                      description: Text extracted from the attachment, when available
                       example: "An image showing a mountain landscape"
               metadata:
                 type: string
                 nullable: true
                 description: Arbitrary data set by a server bot
         message_id:
+          description: Identifier for the Poe query message
           $ref: '#/components/schemas/Identifier'
         user_id:
+          description: Identifier for the Poe user
           $ref: '#/components/schemas/Identifier'
         conversation_id:
+          description: Identifier for the Poe conversation
           $ref: '#/components/schemas/Identifier'
         metadata:
+          description: Identifier for server bot metadata associated with the query
           $ref: '#/components/schemas/Identifier'
           nullable: true
         temperature:
@@ -580,10 +595,13 @@ components:
           description: The type of request
           example: "report_reaction"
         message_id:
+          description: Identifier for the Poe message that received the reaction
           $ref: '#/components/schemas/Identifier'
         user_id:
+          description: Identifier for the Poe user who sent the reaction
           $ref: '#/components/schemas/Identifier'
         conversation_id:
+          description: Identifier for the Poe conversation containing the message
           $ref: '#/components/schemas/Identifier'
         reaction:
           type: string

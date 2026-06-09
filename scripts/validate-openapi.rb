@@ -7,12 +7,35 @@ PLANS = [
   'docs/plans/2026-06-08-placeholder-server-validation.md',
   'docs/plans/2026-06-08-response-status-reference-validation.md',
   'docs/plans/2026-06-09-error-schema-reference-validation.md',
-  'docs/plans/2026-06-09-security-scheme-reference-validation.md'
+  'docs/plans/2026-06-09-security-scheme-reference-validation.md',
+  'docs/plans/2026-06-09-schema-property-description-validation.md'
 ].freeze
 
 spec = YAML.safe_load(File.read('spec.yaml'), aliases: true)
 reference = File.read('spec.md')
 errors = []
+
+def validate_property_descriptions(node, path, errors)
+  case node
+  when Hash
+    if node['properties'].is_a?(Hash)
+      node['properties'].each do |property_name, property_schema|
+        property_path = "#{path}.properties.#{property_name}"
+        description = property_schema['description'].to_s.strip if property_schema.is_a?(Hash)
+
+        errors << "spec.yaml schema property #{property_path} missing description" if description.to_s.empty?
+      end
+    end
+
+    node.each do |key, value|
+      validate_property_descriptions(value, "#{path}.#{key}", errors)
+    end
+  when Array
+    node.each_with_index do |value, index|
+      validate_property_descriptions(value, "#{path}[#{index}]", errors)
+    end
+  end
+end
 
 documented_operations = {}
 documented_sections = {}
@@ -92,6 +115,8 @@ security_schemes.each do |scheme_name, scheme|
     errors << "spec.md Security section missing HTTP auth scheme `#{http_scheme}`"
   end
 end
+
+validate_property_descriptions(spec, 'spec', errors)
 
 paths.each do |path, methods|
   methods.each do |method, operation|

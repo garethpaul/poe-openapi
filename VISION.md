@@ -22,6 +22,7 @@ Priority:
 - Keep documented response status codes aligned with the OpenAPI contract
 - Keep the Markdown Error Handling section aligned with the shared Error schema
 - Keep the Markdown Security section aligned with OpenAPI security schemes
+- Keep schema properties self-describing for generated docs and clients
 - Make placeholder servers and support contacts obvious
 - Require `example.com` servers to be labeled as placeholders in YAML and
   Markdown
@@ -33,6 +34,7 @@ Next priorities:
 - Replace example hostnames only when a real deployment exists
 - Add CI that runs the local OpenAPI validator
 - Add example request and response fixtures for each endpoint
+- Add generated reference output that preserves schema-property descriptions
 
 Contribution rules:
 
