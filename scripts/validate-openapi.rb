@@ -10,7 +10,8 @@ PLANS = [
   'docs/plans/2026-06-09-security-scheme-reference-validation.md',
   'docs/plans/2026-06-09-schema-property-description-validation.md',
   'docs/plans/2026-06-09-component-schema-description-validation.md',
-  'docs/plans/2026-06-09-request-property-reference-validation.md'
+  'docs/plans/2026-06-09-request-property-reference-validation.md',
+  'docs/plans/2026-06-09-operation-security-validation.md'
 ].freeze
 
 spec = YAML.safe_load(File.read('spec.yaml'), aliases: true)
@@ -169,7 +170,17 @@ paths.each do |path, methods|
       errors << "#{method_name} #{path} requestBody should use a component schema"
     end
 
-    Array(operation['security']).each do |security_requirement|
+    security_requirements = operation['security']
+    if !security_requirements.is_a?(Array) || security_requirements.empty?
+      errors << "#{method_name} #{path} missing operation-level security requirement"
+    end
+
+    Array(security_requirements).each do |security_requirement|
+      unless security_requirement.is_a?(Hash) && !security_requirement.empty?
+        errors << "#{method_name} #{path} security requirement must name a scheme"
+        next
+      end
+
       security_requirement.each_key do |scheme|
         errors << "#{method_name} #{path} references unknown security scheme #{scheme}" unless security_schemes.key?(scheme)
       end

@@ -1,5 +1,11 @@
 # Changes
 
+## 2026-06-09
+
+- Added operation-level security validation so each OpenAPI endpoint must
+  declare a non-empty security requirement.
+- Added a static `make build` gate for OpenAPI contract verification.
+
 ## 2026-06-08
 
 - Added response-status reference validation so `spec.md` cannot omit, duplicate,

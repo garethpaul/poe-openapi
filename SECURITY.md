@@ -42,6 +42,9 @@ from names alone.
 Markdown endpoint sections should also name optional top-level request
 properties, including metadata and generation controls, so implementations do
 not silently drop or invent request behavior.
+Every OpenAPI operation should declare a non-empty security requirement so
+generated clients and implementers do not treat protected endpoints as public by
+omission.
 
 ## Dependency and Supply Chain Security
 

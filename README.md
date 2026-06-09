@@ -50,6 +50,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 ## Testing and Verification
 
 - Run `make check` or `make verify` before committing OpenAPI or reference documentation changes.
+- Run `make build` for the static OpenAPI contract build gate; it uses the same
+  dependency-free validator as `make lint`.
 - The verification gate parses `spec.yaml` and checks endpoint, operation ID,
   request-field documentation, response status documentation,
   security scheme, and shared
@@ -62,6 +64,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   `Error` schema.
 - The Markdown Security section must name every OpenAPI security scheme and the
   concrete header or HTTP scheme it uses.
+- Every OpenAPI operation must declare a non-empty operation-level security
+  requirement that names a configured security scheme.
 - Every OpenAPI component schema and schema property must include a non-empty
   `description` so generated clients and readers retain payload and field-level
   semantics.
@@ -92,6 +96,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   Error schema documentation guard.
 - See `docs/plans/2026-06-09-security-scheme-reference-validation.md` for the
   security-scheme documentation guard.
+- See `docs/plans/2026-06-09-operation-security-validation.md` for the
+  operation-level security requirement guard and static `make build` gate.
 - See `docs/plans/2026-06-09-schema-property-description-validation.md` for
   the schema-property description guard.
 - See `docs/plans/2026-06-09-component-schema-description-validation.md` for
