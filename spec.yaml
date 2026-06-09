@@ -321,6 +321,7 @@ components:
 
     SseConversionRequest:
       type: object
+      description: Request payload for converting an upstream SSE stream into Poe Protocol events.
       required:
         - sseUrl
       properties:
@@ -350,6 +351,7 @@ components:
 
     PoeConversionRequest:
       type: object
+      description: Request payload for converting Poe Protocol message content into an SSE stream.
       required:
         - content
       properties:
@@ -372,6 +374,7 @@ components:
 
     PoeQueryRequest:
       type: object
+      description: Poe Protocol query request delivered to a server bot.
       required:
         - version
         - type
@@ -520,6 +523,7 @@ components:
 
     PoeSettingsRequest:
       type: object
+      description: Poe Protocol settings request delivered to a server bot.
       required:
         - version
         - type
@@ -537,6 +541,7 @@ components:
 
     PoeSettingsResponse:
       type: object
+      description: Settings response returned by a server bot to configure Poe features.
       properties:
         server_bot_dependencies:
           type: object
@@ -576,6 +581,7 @@ components:
 
     PoeReactionRequest:
       type: object
+      description: Poe Protocol reaction report sent when a user reacts to a bot message.
       required:
         - version
         - type
@@ -617,6 +623,7 @@ components:
 
     PoeErrorRequest:
       type: object
+      description: Poe Protocol error report sent when Poe observes a bot response problem.
       required:
         - version
         - type
@@ -644,6 +651,7 @@ components:
 
     Error:
       type: object
+      description: Standard JSON error payload returned by non-success responses.
       required:
         - error
         - message

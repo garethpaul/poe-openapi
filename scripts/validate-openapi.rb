@@ -8,7 +8,8 @@ PLANS = [
   'docs/plans/2026-06-08-response-status-reference-validation.md',
   'docs/plans/2026-06-09-error-schema-reference-validation.md',
   'docs/plans/2026-06-09-security-scheme-reference-validation.md',
-  'docs/plans/2026-06-09-schema-property-description-validation.md'
+  'docs/plans/2026-06-09-schema-property-description-validation.md',
+  'docs/plans/2026-06-09-component-schema-description-validation.md'
 ].freeze
 
 spec = YAML.safe_load(File.read('spec.yaml'), aliases: true)
@@ -61,6 +62,13 @@ components = spec.fetch('components', {})
 schemas = components.fetch('schemas', {})
 security_schemes = components.fetch('securitySchemes', {})
 operation_ids = []
+
+schemas.each do |schema_name, schema|
+  description = schema['description'].to_s.strip if schema.is_a?(Hash)
+  next unless description.to_s.empty?
+
+  errors << "spec.yaml component schema #{schema_name} missing description"
+end
 
 PLANS.each do |plan_path|
   unless File.file?(plan_path)

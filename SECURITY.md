@@ -35,9 +35,10 @@ Helpful reports include:
 
 For web services, APIs, sockets, or scraping workflows, prioritize reports involving authentication bypass, authorization errors, injection, server-side request forgery, unsafe deserialization, credential leakage, data exposure, or denial-of-service conditions. Use test accounts and minimal proof-of-concept traffic only.
 
-OpenAPI schema fields should keep explicit descriptions, especially around
-identifiers, metadata, attachments, feedback, and authentication-adjacent
-payloads, so implementers do not infer unsafe semantics from names alone.
+OpenAPI component schemas and fields should keep explicit descriptions,
+especially around identifiers, metadata, attachments, feedback, and
+authentication-adjacent payloads, so implementers do not infer unsafe semantics
+from names alone.
 
 ## Dependency and Supply Chain Security
 
