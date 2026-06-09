@@ -56,6 +56,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   error-response coverage against `spec.md`.
 - Example `example.com` servers must stay explicitly marked as placeholders in
   both the YAML and Markdown reference.
+- The Markdown Error Handling section must document each field in the shared
+  `Error` schema.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
 
@@ -79,6 +81,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   canonical completed engineering plan.
 - See `docs/plans/2026-06-08-response-status-reference-validation.md` for the
   response-status reference guard.
+- See `docs/plans/2026-06-09-error-schema-reference-validation.md` for the
+  Error schema documentation guard.
 - See `plans/2026-06-08-request-field-reference-validation.md` for the current
   request-field documentation guard.
 

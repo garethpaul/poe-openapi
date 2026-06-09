@@ -5,7 +5,8 @@ require 'yaml'
 
 PLANS = [
   'docs/plans/2026-06-08-placeholder-server-validation.md',
-  'docs/plans/2026-06-08-response-status-reference-validation.md'
+  'docs/plans/2026-06-08-response-status-reference-validation.md',
+  'docs/plans/2026-06-09-error-schema-reference-validation.md'
 ].freeze
 
 spec = YAML.safe_load(File.read('spec.yaml'), aliases: true)
@@ -61,6 +62,14 @@ Array(spec.fetch('servers', [])).each do |server|
   unless reference_line&.downcase&.include?('placeholder')
     errors << "example.com server #{url} must be described as a placeholder in spec.md"
   end
+end
+
+error_schema = schemas.fetch('Error', {})
+error_section = reference[/^## Error Handling\n(?<body>.*?)(?=^## |\z)/m, :body].to_s
+error_schema.fetch('properties', {}).each_key do |field|
+  next if error_section.include?("\"#{field}\"") || error_section.include?("`#{field}`")
+
+  errors << "spec.md Error Handling section missing Error schema field `#{field}`"
 end
 
 paths.each do |path, methods|
