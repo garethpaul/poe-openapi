@@ -17,6 +17,7 @@ This README is based on the checked-in source, manifests, scripts, and repositor
 - `SECURITY.md` - security reporting and disclosure guidance
 - `docs/plans` - completed engineering plans and verification records
 - `scripts` - deterministic OpenAPI validation checks
+- `scripts/check-baseline.sh` - repository maintenance baseline guard
 - `VISION.md` - project direction and maintenance guardrails
 
 Additional scan context:
@@ -52,6 +53,7 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 - Run `make check` or `make verify` before committing OpenAPI or reference documentation changes.
 - Run `make build` for the static OpenAPI contract build gate; it uses the same
   dependency-free validator as `make lint`.
+- Run `scripts/check-baseline.sh` for the repository baseline guard.
 - The verification gate parses `spec.yaml` and checks endpoint, operation ID,
   request-field documentation, response status documentation,
   security scheme, and shared
@@ -69,6 +71,11 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 - Every OpenAPI component schema and schema property must include a non-empty
   `description` so generated clients and readers retain payload and field-level
   semantics.
+- Every OpenAPI schema `required` entry must name a property declared on that
+  same schema so generated clients do not inherit impossible payload contracts.
+- The baseline script checks required files, validator wiring, completed
+  docs-plan metadata, verification documentation, and local secret/editor
+  metadata hygiene.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
 
@@ -104,6 +111,10 @@ When the required SDK or runtime is unavailable, use static checks and source re
   the component-schema description guard.
 - See `docs/plans/2026-06-09-request-property-reference-validation.md` for
   request-property reference validation in `spec.md`.
+- See `docs/plans/2026-06-09-required-property-validation.md` for recursive
+  OpenAPI required-property validation.
+- See `docs/plans/2026-06-09-scripted-baseline-check.md` for the scripted
+  repository baseline guard.
 - See `plans/2026-06-08-request-field-reference-validation.md` for the current
   request-field documentation guard.
 

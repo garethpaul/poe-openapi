@@ -4,6 +4,10 @@
 
 - Added operation-level security validation so each OpenAPI endpoint must
   declare a non-empty security requirement.
+- Added recursive required-property validation so every OpenAPI schema
+  `required` entry must name a property declared on that schema.
+- Added `scripts/check-baseline.sh` and `.gitignore` coverage for required
+  files, validator wiring, completed plan metadata, and verification docs.
 - Added a static `make build` gate for OpenAPI contract verification.
 
 ## 2026-06-08

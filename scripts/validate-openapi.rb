@@ -11,7 +11,9 @@ PLANS = [
   'docs/plans/2026-06-09-schema-property-description-validation.md',
   'docs/plans/2026-06-09-component-schema-description-validation.md',
   'docs/plans/2026-06-09-request-property-reference-validation.md',
-  'docs/plans/2026-06-09-operation-security-validation.md'
+  'docs/plans/2026-06-09-operation-security-validation.md',
+  'docs/plans/2026-06-09-required-property-validation.md',
+  'docs/plans/2026-06-09-scripted-baseline-check.md'
 ].freeze
 
 spec = YAML.safe_load(File.read('spec.yaml'), aliases: true)
@@ -36,6 +38,32 @@ def validate_property_descriptions(node, path, errors)
   when Array
     node.each_with_index do |value, index|
       validate_property_descriptions(value, "#{path}[#{index}]", errors)
+    end
+  end
+end
+
+def validate_required_properties(node, path, errors)
+  case node
+  when Hash
+    if node['required'].is_a?(Array)
+      properties = node['properties']
+      if properties.is_a?(Hash)
+        node['required'].each do |field|
+          next if properties.key?(field)
+
+          errors << "spec.yaml schema #{path} requires unknown field `#{field}`"
+        end
+      else
+        errors << "spec.yaml schema #{path} declares required fields without properties"
+      end
+    end
+
+    node.each do |key, value|
+      validate_required_properties(value, "#{path}.#{key}", errors)
+    end
+  when Array
+    node.each_with_index do |value, index|
+      validate_required_properties(value, "#{path}[#{index}]", errors)
     end
   end
 end
@@ -127,6 +155,7 @@ security_schemes.each do |scheme_name, scheme|
 end
 
 validate_property_descriptions(spec, 'spec', errors)
+validate_required_properties(spec, 'spec', errors)
 
 paths.each do |path, methods|
   methods.each do |method, operation|
@@ -161,11 +190,6 @@ paths.each do |path, methods|
         errors << "spec.md request body for #{method_name} #{path} missing field `#{field}`"
       end
 
-      Array(schema['required']).each do |field|
-        next if request_properties.key?(field)
-
-        errors << "spec.yaml request schema #{schema_name} requires unknown field `#{field}`"
-      end
     elsif operation['requestBody']
       errors << "#{method_name} #{path} requestBody should use a component schema"
     end
