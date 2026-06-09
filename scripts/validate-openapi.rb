@@ -9,7 +9,8 @@ PLANS = [
   'docs/plans/2026-06-09-error-schema-reference-validation.md',
   'docs/plans/2026-06-09-security-scheme-reference-validation.md',
   'docs/plans/2026-06-09-schema-property-description-validation.md',
-  'docs/plans/2026-06-09-component-schema-description-validation.md'
+  'docs/plans/2026-06-09-component-schema-description-validation.md',
+  'docs/plans/2026-06-09-request-property-reference-validation.md'
 ].freeze
 
 spec = YAML.safe_load(File.read('spec.yaml'), aliases: true)
@@ -151,11 +152,18 @@ paths.each do |path, methods|
       schema_name = request_schema_ref.delete_prefix('#/components/schemas/')
       schema = schemas.fetch(schema_name, {})
       documented_section = documented_sections.fetch([path, method_name], '')
+      request_properties = schema.fetch('properties', {})
 
-      Array(schema['required']).each do |field|
+      request_properties.each_key do |field|
         next if documented_section.match?(/`#{Regexp.escape(field)}`/)
 
-        errors << "spec.md request body for #{method_name} #{path} missing required field `#{field}`"
+        errors << "spec.md request body for #{method_name} #{path} missing field `#{field}`"
+      end
+
+      Array(schema['required']).each do |field|
+        next if request_properties.key?(field)
+
+        errors << "spec.yaml request schema #{schema_name} requires unknown field `#{field}`"
       end
     elsif operation['requestBody']
       errors << "#{method_name} #{path} requestBody should use a component schema"

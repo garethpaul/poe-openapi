@@ -10,6 +10,8 @@
   security scheme and its concrete header or HTTP scheme.
 - Added component-schema description validation so shared OpenAPI payloads
   keep top-level semantics for generated docs and clients.
+- Added request-property reference validation so optional top-level request
+  fields stay documented in the Markdown endpoint reference.
 - Added schema-property description validation so OpenAPI fields keep
   field-level semantics for generated docs and clients.
 - Added canonical `docs/plans` coverage and placeholder-server validation so

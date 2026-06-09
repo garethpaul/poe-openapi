@@ -60,8 +60,9 @@ The SSE to Poe Protocol Adapter API acts as a bridge between Server-Sent Events 
 - **Method**: `POST`
 - **Operation ID**: `handlePoeQuery`
 - **Description**: Processes Poe query requests according to the Poe Protocol.
-- **Request Body**: 
-  - `version`, `type`, `query`, `message_id`, `user_id`, `conversation_id` (all required).
+- **Request Body**:
+  - Required: `version`, `type`, `query`, `message_id`, `user_id`, and `conversation_id`.
+  - Optional: `metadata`, `temperature`, `skip_system_prompt`, `stop_sequences`, and `logit_bias`.
 
 - **Responses**:
   - `200`: Successful response to query.
@@ -105,8 +106,9 @@ The SSE to Poe Protocol Adapter API acts as a bridge between Server-Sent Events 
 - **Method**: `POST`
 - **Operation ID**: `handlePoeErrorReport`
 - **Description**: Accepts error reports from Poe.
-- **Request Body**: 
-  - `version`, `type`, `message` (all required).
+- **Request Body**:
+  - Required: `version`, `type`, and `message`.
+  - Optional: `metadata`.
 
 - **Responses**:
   - `200`: Error report received.

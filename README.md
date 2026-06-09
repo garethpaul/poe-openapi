@@ -51,9 +51,11 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 
 - Run `make check` or `make verify` before committing OpenAPI or reference documentation changes.
 - The verification gate parses `spec.yaml` and checks endpoint, operation ID,
-  required request-field documentation, response status documentation,
+  request-field documentation, response status documentation,
   security scheme, and shared
   error-response coverage against `spec.md`.
+- Every top-level JSON request-body property, required or optional, must stay
+  named in the matching Markdown endpoint section.
 - Example `example.com` servers must stay explicitly marked as placeholders in
   both the YAML and Markdown reference.
 - The Markdown Error Handling section must document each field in the shared
@@ -94,6 +96,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   the schema-property description guard.
 - See `docs/plans/2026-06-09-component-schema-description-validation.md` for
   the component-schema description guard.
+- See `docs/plans/2026-06-09-request-property-reference-validation.md` for
+  request-property reference validation in `spec.md`.
 - See `plans/2026-06-08-request-field-reference-validation.md` for the current
   request-field documentation guard.
 

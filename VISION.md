@@ -19,6 +19,8 @@ Priority:
 - Keep `spec.md` aligned with the YAML specification
 - Maintain `make check` and `make verify` as the local OpenAPI consistency gates
 - Preserve required request-field documentation in the Markdown reference
+- Keep optional top-level request properties documented in the Markdown
+  reference
 - Keep documented response status codes aligned with the OpenAPI contract
 - Keep the Markdown Error Handling section aligned with the shared Error schema
 - Keep the Markdown Security section aligned with OpenAPI security schemes

@@ -39,6 +39,9 @@ OpenAPI component schemas and fields should keep explicit descriptions,
 especially around identifiers, metadata, attachments, feedback, and
 authentication-adjacent payloads, so implementers do not infer unsafe semantics
 from names alone.
+Markdown endpoint sections should also name optional top-level request
+properties, including metadata and generation controls, so implementations do
+not silently drop or invent request behavior.
 
 ## Dependency and Supply Chain Security
 
