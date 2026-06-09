@@ -6,7 +6,8 @@ require 'yaml'
 PLANS = [
   'docs/plans/2026-06-08-placeholder-server-validation.md',
   'docs/plans/2026-06-08-response-status-reference-validation.md',
-  'docs/plans/2026-06-09-error-schema-reference-validation.md'
+  'docs/plans/2026-06-09-error-schema-reference-validation.md',
+  'docs/plans/2026-06-09-security-scheme-reference-validation.md'
 ].freeze
 
 spec = YAML.safe_load(File.read('spec.yaml'), aliases: true)
@@ -70,6 +71,26 @@ error_schema.fetch('properties', {}).each_key do |field|
   next if error_section.include?("\"#{field}\"") || error_section.include?("`#{field}`")
 
   errors << "spec.md Error Handling section missing Error schema field `#{field}`"
+end
+
+security_section = reference[/^## Security\n(?<body>.*?)(?=^## |\z)/m, :body].to_s
+security_schemes.each do |scheme_name, scheme|
+  unless security_section.include?("`#{scheme_name}`")
+    errors << "spec.md Security section missing security scheme `#{scheme_name}`"
+  end
+
+  case scheme.fetch('type', nil)
+  when 'apiKey'
+    header_name = scheme.fetch('name', '').to_s
+    next if header_name.empty? || security_section.include?("`#{header_name}`")
+
+    errors << "spec.md Security section missing API key header `#{header_name}`"
+  when 'http'
+    http_scheme = scheme.fetch('scheme', '').to_s
+    next if http_scheme.empty? || security_section.downcase.include?("`#{http_scheme.downcase}`")
+
+    errors << "spec.md Security section missing HTTP auth scheme `#{http_scheme}`"
+  end
 end
 
 paths.each do |path, methods|

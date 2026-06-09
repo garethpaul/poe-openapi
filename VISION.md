@@ -21,6 +21,7 @@ Priority:
 - Preserve required request-field documentation in the Markdown reference
 - Keep documented response status codes aligned with the OpenAPI contract
 - Keep the Markdown Error Handling section aligned with the shared Error schema
+- Keep the Markdown Security section aligned with OpenAPI security schemes
 - Make placeholder servers and support contacts obvious
 - Require `example.com` servers to be labeled as placeholders in YAML and
   Markdown

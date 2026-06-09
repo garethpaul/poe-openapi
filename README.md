@@ -58,6 +58,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   both the YAML and Markdown reference.
 - The Markdown Error Handling section must document each field in the shared
   `Error` schema.
+- The Markdown Security section must name every OpenAPI security scheme and the
+  concrete header or HTTP scheme it uses.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
 
@@ -83,6 +85,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   response-status reference guard.
 - See `docs/plans/2026-06-09-error-schema-reference-validation.md` for the
   Error schema documentation guard.
+- See `docs/plans/2026-06-09-security-scheme-reference-validation.md` for the
+  security-scheme documentation guard.
 - See `plans/2026-06-08-request-field-reference-validation.md` for the current
   request-field documentation guard.
 

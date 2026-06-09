@@ -118,8 +118,9 @@ The SSE to Poe Protocol Adapter API acts as a bridge between Server-Sent Events 
 
 The API uses two types of authentication:
 
-- **API Key Authentication**: Requires an API key in the header (`X-API-Key`).
-- **Bearer Token Authentication**: Requires a bearer token for certain endpoints.
+- **`ApiKeyAuth`**: Requires an API key in the header (`X-API-Key`).
+- **`BearerAuth`**: Requires HTTP `bearer` authentication for Poe Protocol
+  endpoints.
 
 ## Error Handling
 
