@@ -7,6 +7,7 @@ MAKEFILE="$ROOT_DIR/Makefile"
 GITIGNORE="$ROOT_DIR/.gitignore"
 VALIDATOR="$ROOT_DIR/scripts/validate-openapi.rb"
 DOCS_PLANS="$ROOT_DIR/docs/plans"
+WORKFLOW="$ROOT_DIR/.github/workflows/check.yml"
 
 require_file() {
   path=$1
@@ -28,6 +29,8 @@ for path in \
   "scripts/validate-openapi.rb" \
   "docs/plans/2026-06-08-placeholder-server-validation.md" \
   "docs/plans/2026-06-09-scripted-baseline-check.md" \
+  "docs/plans/2026-06-10-hosted-openapi-validation.md" \
+  ".github/workflows/check.yml" \
   "scripts/check-baseline.sh"; do
   require_file "$path"
 done
@@ -68,6 +71,31 @@ done
 
 if ! grep -Fq "docs/plans/2026-06-09-scripted-baseline-check.md" "$VALIDATOR"; then
   printf '%s\n' "OpenAPI validator must include the scripted baseline plan." >&2
+  exit 1
+fi
+
+if ! grep -Fq "docs/plans/2026-06-10-hosted-openapi-validation.md" "$VALIDATOR"; then
+  printf '%s\n' "OpenAPI validator must include the hosted validation plan." >&2
+  exit 1
+fi
+
+if ! grep -Fxq 'permissions:' "$WORKFLOW" || ! grep -Fxq '  contents: read' "$WORKFLOW"; then
+  printf '%s\n' "Hosted validation must use read-only repository contents permission." >&2
+  exit 1
+fi
+
+if ! grep -Fq 'uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10' "$WORKFLOW"; then
+  printf '%s\n' "Hosted validation must pin the reviewed actions/checkout v6 commit." >&2
+  exit 1
+fi
+
+if ! grep -Eq '^[[:space:]]+run: make check$' "$WORKFLOW"; then
+  printf '%s\n' "Hosted validation must run the canonical make check gate." >&2
+  exit 1
+fi
+
+if ! (cd / && "$VALIDATOR" >/dev/null); then
+  printf '%s\n' "OpenAPI validator must run independently of the caller's working directory." >&2
   exit 1
 fi
 

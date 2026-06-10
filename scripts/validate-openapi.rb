@@ -3,6 +3,9 @@
 
 require 'yaml'
 
+ROOT_DIR = File.expand_path('..', __dir__)
+Dir.chdir(ROOT_DIR)
+
 PLANS = [
   'docs/plans/2026-06-08-placeholder-server-validation.md',
   'docs/plans/2026-06-08-response-status-reference-validation.md',
@@ -14,7 +17,8 @@ PLANS = [
   'docs/plans/2026-06-09-request-property-reference-validation.md',
   'docs/plans/2026-06-09-operation-security-validation.md',
   'docs/plans/2026-06-09-required-property-validation.md',
-  'docs/plans/2026-06-09-scripted-baseline-check.md'
+  'docs/plans/2026-06-09-scripted-baseline-check.md',
+  'docs/plans/2026-06-10-hosted-openapi-validation.md'
 ].freeze
 
 spec = YAML.safe_load(File.read('spec.yaml'), aliases: true)

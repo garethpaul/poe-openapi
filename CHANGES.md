@@ -2,6 +2,10 @@
 
 ## 2026-06-10
 
+- Added hosted OpenAPI contract validation with read-only permissions and a
+  pinned checkout action.
+- Made the OpenAPI validator independent of the caller's working directory and
+  protected that behavior in the scripted baseline check.
 - Added security-scheme description validation so generated OpenAPI docs keep
   authentication semantics attached to each scheme.
 

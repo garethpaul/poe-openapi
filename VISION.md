@@ -19,6 +19,9 @@ Priority:
 - Keep `spec.md` aligned with the YAML specification
 - Maintain `make check`, `make verify`, and `make build` as the local OpenAPI
   consistency gates
+- Run the canonical dependency-free OpenAPI gate in hosted CI with read-only
+  permissions and pinned third-party actions
+- Keep the validator independent of the caller's working directory
 - Keep a scriptable baseline guard for required files and local metadata
 - Preserve required request-field documentation in the Markdown reference
 - Keep optional top-level request properties documented in the Markdown
@@ -40,7 +43,6 @@ Next priorities:
 
 - Add generation steps for producing Markdown from the YAML spec
 - Replace example hostnames only when a real deployment exists
-- Add CI that runs the local OpenAPI validator
 - Add example request and response fixtures for each endpoint
 - Add generated reference output that preserves component and property
   descriptions
