@@ -66,6 +66,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   `Error` schema.
 - The Markdown Security section must name every OpenAPI security scheme and the
   concrete header or HTTP scheme it uses.
+- Every OpenAPI security scheme must include a non-empty `description` so
+  generated docs explain how credentials are supplied.
 - Every OpenAPI operation must declare a non-empty operation-level security
   requirement that names a configured security scheme.
 - Every OpenAPI component schema and schema property must include a non-empty
@@ -103,6 +105,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   Error schema documentation guard.
 - See `docs/plans/2026-06-09-security-scheme-reference-validation.md` for the
   security-scheme documentation guard.
+- See `docs/plans/2026-06-10-security-scheme-description-validation.md` for
+  the security-scheme description guard.
 - See `docs/plans/2026-06-09-operation-security-validation.md` for the
   operation-level security requirement guard and static `make build` gate.
 - See `docs/plans/2026-06-09-schema-property-description-validation.md` for

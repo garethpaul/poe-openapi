@@ -10,6 +10,7 @@ PLANS = [
   'docs/plans/2026-06-09-security-scheme-reference-validation.md',
   'docs/plans/2026-06-09-schema-property-description-validation.md',
   'docs/plans/2026-06-09-component-schema-description-validation.md',
+  'docs/plans/2026-06-10-security-scheme-description-validation.md',
   'docs/plans/2026-06-09-request-property-reference-validation.md',
   'docs/plans/2026-06-09-operation-security-validation.md',
   'docs/plans/2026-06-09-required-property-validation.md',
@@ -136,6 +137,9 @@ end
 
 security_section = reference[/^## Security\n(?<body>.*?)(?=^## |\z)/m, :body].to_s
 security_schemes.each do |scheme_name, scheme|
+  scheme_description = scheme.fetch('description', '').to_s.strip
+  errors << "spec.yaml security scheme #{scheme_name} missing description" if scheme_description.empty?
+
   unless security_section.include?("`#{scheme_name}`")
     errors << "spec.md Security section missing security scheme `#{scheme_name}`"
   end

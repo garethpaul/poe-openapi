@@ -45,6 +45,8 @@ not silently drop or invent request behavior.
 Every OpenAPI operation should declare a non-empty security requirement so
 generated clients and implementers do not treat protected endpoints as public by
 omission.
+Security schemes should carry explicit OpenAPI descriptions so generated docs
+show whether credentials are supplied by header or bearer token.
 
 ## Dependency and Supply Chain Security
 

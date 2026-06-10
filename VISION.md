@@ -27,6 +27,7 @@ Priority:
 - Keep documented response status codes aligned with the OpenAPI contract
 - Keep the Markdown Error Handling section aligned with the shared Error schema
 - Keep the Markdown Security section aligned with OpenAPI security schemes
+- Keep OpenAPI security schemes self-describing for generated docs
 - Require every operation to declare an explicit security requirement
 - Keep component schemas and their properties self-describing for generated
   docs and clients

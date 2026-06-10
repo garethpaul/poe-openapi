@@ -1,5 +1,10 @@
 # Changes
 
+## 2026-06-10
+
+- Added security-scheme description validation so generated OpenAPI docs keep
+  authentication semantics attached to each scheme.
+
 ## 2026-06-09
 
 - Added operation-level security validation so each OpenAPI endpoint must
