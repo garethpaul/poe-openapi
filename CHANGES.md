@@ -8,6 +8,8 @@
   protected that behavior in the scripted baseline check.
 - Added security-scheme description validation so generated OpenAPI docs keep
   authentication semantics attached to each scheme.
+- Added recursive local-reference validation so dangling OpenAPI JSON Pointers
+  fail before they reach documentation or client generators.
 
 ## 2026-06-09
 

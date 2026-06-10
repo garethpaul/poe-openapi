@@ -80,6 +80,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   semantics.
 - Every OpenAPI schema `required` entry must name a property declared on that
   same schema so generated clients do not inherit impossible payload contracts.
+- Every local OpenAPI `$ref` must resolve through its JSON Pointer so component
+  renames and reference typos cannot leave generated clients with dangling types.
 - The baseline script checks required files, validator wiring, completed
   docs-plan metadata, hosted workflow permissions and action pinning,
   location-independent invocation, verification documentation, and local
@@ -127,6 +129,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   repository baseline guard.
 - See `docs/plans/2026-06-10-hosted-openapi-validation.md` for hosted contract
   validation and location-independent script execution.
+- See `docs/plans/2026-06-10-local-reference-validation.md` for recursive local
+  OpenAPI reference validation.
 - See `plans/2026-06-08-request-field-reference-validation.md` for the current
   request-field documentation guard.
 
