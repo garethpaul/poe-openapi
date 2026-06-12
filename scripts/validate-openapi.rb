@@ -21,7 +21,8 @@ PLANS = [
   'docs/plans/2026-06-10-hosted-openapi-validation.md',
   'docs/plans/2026-06-10-local-reference-validation.md',
   'docs/plans/2026-06-12-response-description-validation.md',
-  'docs/plans/2026-06-12-self-contained-reference-validation.md'
+  'docs/plans/2026-06-12-self-contained-reference-validation.md',
+  'docs/plans/2026-06-12-supported-ruby-matrix.md'
 ].freeze
 
 spec = YAML.safe_load(File.read('spec.yaml'), aliases: true)
