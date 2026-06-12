@@ -28,6 +28,7 @@ Priority:
   reference
 - Keep OpenAPI schema `required` lists aligned with declared properties
 - Keep documented response status codes aligned with the OpenAPI contract
+- Require every response status to retain a non-empty OpenAPI description
 - Keep the Markdown Error Handling section aligned with the shared Error schema
 - Keep the Markdown Security section aligned with OpenAPI security schemes
 - Keep OpenAPI security schemes self-describing for generated docs

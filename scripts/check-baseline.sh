@@ -26,10 +26,12 @@ for path in \
   "VISION.md" \
   "spec.md" \
   "spec.yaml" \
+  "scripts/test-validator.sh" \
   "scripts/validate-openapi.rb" \
   "docs/plans/2026-06-08-placeholder-server-validation.md" \
   "docs/plans/2026-06-09-scripted-baseline-check.md" \
   "docs/plans/2026-06-10-hosted-openapi-validation.md" \
+  "docs/plans/2026-06-12-response-description-validation.md" \
   ".github/workflows/check.yml" \
   "scripts/check-baseline.sh"; do
   require_file "$path"
@@ -40,6 +42,11 @@ if ! [ -x "$VALIDATOR" ]; then
   exit 1
 fi
 
+if ! [ -x "$ROOT_DIR/scripts/test-validator.sh" ]; then
+  printf '%s\n' "scripts/test-validator.sh must be executable." >&2
+  exit 1
+fi
+
 if ! grep -Fq "scripts/check-baseline.sh" "$MAKEFILE"; then
   printf '%s\n' "Makefile must run scripts/check-baseline.sh from make check." >&2
   exit 1
@@ -47,6 +54,11 @@ fi
 
 if ! grep -Fq "scripts/validate-openapi.rb" "$MAKEFILE"; then
   printf '%s\n' "Makefile must expose the OpenAPI validator." >&2
+  exit 1
+fi
+
+if ! grep -Fq "scripts/test-validator.sh" "$MAKEFILE"; then
+  printf '%s\n' "Makefile must run validator mutation tests." >&2
   exit 1
 fi
 
@@ -62,7 +74,7 @@ if ! grep -Fq 'Ruby and `make`' "$README"; then
   exit 1
 fi
 
-for documented in "make check" "make build" "scripts/check-baseline.sh"; do
+for documented in "make check" "make build" "scripts/check-baseline.sh" "Every OpenAPI response must include a non-empty"; do
   if ! grep -Fq "$documented" "$README"; then
     printf '%s\n' "README must document $documented." >&2
     exit 1
@@ -71,6 +83,11 @@ done
 
 if ! grep -Fq "docs/plans/2026-06-09-scripted-baseline-check.md" "$VALIDATOR"; then
   printf '%s\n' "OpenAPI validator must include the scripted baseline plan." >&2
+  exit 1
+fi
+
+if ! grep -Fq "response missing description" "$VALIDATOR"; then
+  printf '%s\n' "OpenAPI validator must reject missing response descriptions." >&2
   exit 1
 fi
 

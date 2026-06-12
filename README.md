@@ -82,6 +82,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   same schema so generated clients do not inherit impossible payload contracts.
 - Every local OpenAPI `$ref` must resolve through its JSON Pointer so component
   renames and reference typos cannot leave generated clients with dangling types.
+- Every OpenAPI response must include a non-empty `description` so generated
+  documentation retains the meaning of each status code.
 - The baseline script checks required files, validator wiring, completed
   docs-plan metadata, hosted workflow permissions and action pinning,
   location-independent invocation, verification documentation, and local
@@ -131,6 +133,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   validation and location-independent script execution.
 - See `docs/plans/2026-06-10-local-reference-validation.md` for recursive local
   OpenAPI reference validation.
+- See `docs/plans/2026-06-12-response-description-validation.md` for required
+  response-description validation and its mutation test.
 - See `plans/2026-06-08-request-field-reference-validation.md` for the current
   request-field documentation guard.
 

@@ -19,7 +19,8 @@ PLANS = [
   'docs/plans/2026-06-09-required-property-validation.md',
   'docs/plans/2026-06-09-scripted-baseline-check.md',
   'docs/plans/2026-06-10-hosted-openapi-validation.md',
-  'docs/plans/2026-06-10-local-reference-validation.md'
+  'docs/plans/2026-06-10-local-reference-validation.md',
+  'docs/plans/2026-06-12-response-description-validation.md'
 ].freeze
 
 spec = YAML.safe_load(File.read('spec.yaml'), aliases: true)
@@ -282,6 +283,11 @@ paths.each do |path, methods|
     end
 
     responses.each do |status, response|
+      description = response.fetch('description', '').to_s.strip
+      if description.empty?
+        errors << "#{method_name} #{path} #{status} response missing description"
+      end
+
       next if status.to_s.start_with?('2')
 
       schema = response.dig('content', 'application/json', 'schema')

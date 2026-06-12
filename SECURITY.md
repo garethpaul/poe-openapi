@@ -47,6 +47,9 @@ generated clients and implementers do not treat protected endpoints as public by
 omission.
 Security schemes should carry explicit OpenAPI descriptions so generated docs
 show whether credentials are supplied by header or bearer token.
+Response objects should keep non-empty descriptions so implementers can
+distinguish success and failure semantics instead of inferring behavior from a
+status code alone.
 Hosted validation uses read-only repository access, a pinned checkout action,
 and the dependency-free local contract gate to limit CI credential and supply
 chain exposure.

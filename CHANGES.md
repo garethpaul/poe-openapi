@@ -1,5 +1,12 @@
 # Changes
 
+## 2026-06-12
+
+- Added response-description validation so missing or whitespace-only OpenAPI
+  response descriptions fail before reaching generated documentation.
+- Added a dependency-free mutation test and wired it through `make test` and
+  the canonical `make check` gate.
+
 ## 2026-06-10
 
 - Added hosted OpenAPI contract validation with read-only permissions and a
