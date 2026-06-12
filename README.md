@@ -53,7 +53,9 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 
 - Run `make check` or `make verify` before committing OpenAPI or reference documentation changes.
 - GitHub Actions runs the same dependency-free `make check` gate for pushes to
-  `main` and for pull requests.
+  `main`, pull requests, and manual dispatches. Checkout credentials are not
+  persisted, Ruby setup is pinned, and the baseline runs on Ruby 2.7 and 3.3
+  while enforcing the complete workflow contract.
 - Run `make build` for the static OpenAPI contract build gate; it uses the same
   dependency-free validator as `make lint`.
 - Run `scripts/check-baseline.sh` for the repository baseline guard.
@@ -80,8 +82,12 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   semantics.
 - Every OpenAPI schema `required` entry must name a property declared on that
   same schema so generated clients do not inherit impossible payload contracts.
-- Every local OpenAPI `$ref` must resolve through its JSON Pointer so component
-  renames and reference typos cannot leave generated clients with dangling types.
+- Every OpenAPI `$ref` must be a local string and resolve through its JSON
+  Pointer so the contract stays self-contained and component renames or
+  reference typos cannot leave generated clients with dangling types.
+- Validator mutations reject external URLs, relative files, non-string values,
+  and dangling references while accepting correctly escaped JSON Pointer `/`
+  and `~` tokens.
 - Every OpenAPI response must include a non-empty `description` so generated
   documentation retains the meaning of each status code.
 - The baseline script checks required files, validator wiring, completed
@@ -135,6 +141,10 @@ When the required SDK or runtime is unavailable, use static checks and source re
   OpenAPI reference validation.
 - See `docs/plans/2026-06-12-response-description-validation.md` for required
   response-description validation and its mutation test.
+- See `docs/plans/2026-06-12-credential-free-openapi-validation.md` for the
+  exact credential-free hosted workflow and reference mutation coverage.
+- See `docs/plans/2026-06-12-self-contained-reference-validation.md` for the
+  local-only OpenAPI reference contract and its mutation coverage.
 - See `plans/2026-06-08-request-field-reference-validation.md` for the current
   request-field documentation guard.
 
