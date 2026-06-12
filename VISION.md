@@ -19,12 +19,18 @@ Priority:
 - Keep `spec.md` aligned with the YAML specification
 - Maintain `make check`, `make verify`, and `make build` as the local OpenAPI
   consistency gates
+- Run the canonical dependency-free OpenAPI gate in hosted CI with read-only
+  permissions and pinned third-party actions
+- Keep hosted checkout credential-free and reject workflow drift structurally
+- Preserve Ruby 2.7 compatibility while validating on modern Ruby 3.3
+- Keep the validator independent of the caller's working directory
 - Keep a scriptable baseline guard for required files and local metadata
 - Preserve required request-field documentation in the Markdown reference
 - Keep optional top-level request properties documented in the Markdown
   reference
 - Keep OpenAPI schema `required` lists aligned with declared properties
 - Keep documented response status codes aligned with the OpenAPI contract
+- Require every response status to retain a non-empty OpenAPI description
 - Keep the Markdown Error Handling section aligned with the shared Error schema
 - Keep the Markdown Security section aligned with OpenAPI security schemes
 - Keep OpenAPI security schemes self-describing for generated docs
@@ -40,7 +46,6 @@ Next priorities:
 
 - Add generation steps for producing Markdown from the YAML spec
 - Replace example hostnames only when a real deployment exists
-- Add CI that runs the local OpenAPI validator
 - Add example request and response fixtures for each endpoint
 - Add generated reference output that preserves component and property
   descriptions

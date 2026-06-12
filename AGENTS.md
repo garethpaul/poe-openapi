@@ -41,6 +41,7 @@
 ## Safety and gotchas
 
 - The scan found credential-adjacent names. Review configuration paths before running against real accounts.
+- Keep every operation's security requirement and referenced security scheme aligned between `spec.yaml` and `spec.md`.
 - See `SECURITY.md` for vulnerability reporting and safe research guidance.
 - See `VISION.md` for project direction and contribution guardrails.
 - See `CHANGES.md` for maintenance history.

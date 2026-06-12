@@ -3,6 +3,9 @@
 
 require 'yaml'
 
+ROOT_DIR = File.expand_path('..', __dir__)
+Dir.chdir(ROOT_DIR)
+
 PLANS = [
   'docs/plans/2026-06-08-placeholder-server-validation.md',
   'docs/plans/2026-06-08-response-status-reference-validation.md',
@@ -14,7 +17,10 @@ PLANS = [
   'docs/plans/2026-06-09-request-property-reference-validation.md',
   'docs/plans/2026-06-09-operation-security-validation.md',
   'docs/plans/2026-06-09-required-property-validation.md',
-  'docs/plans/2026-06-09-scripted-baseline-check.md'
+  'docs/plans/2026-06-09-scripted-baseline-check.md',
+  'docs/plans/2026-06-10-hosted-openapi-validation.md',
+  'docs/plans/2026-06-10-local-reference-validation.md',
+  'docs/plans/2026-06-12-response-description-validation.md'
 ].freeze
 
 spec = YAML.safe_load(File.read('spec.yaml'), aliases: true)
@@ -65,6 +71,46 @@ def validate_required_properties(node, path, errors)
   when Array
     node.each_with_index do |value, index|
       validate_required_properties(value, "#{path}[#{index}]", errors)
+    end
+  end
+end
+
+def resolve_json_pointer(document, reference)
+  return document if reference == '#'
+  return unless reference.start_with?('#/')
+
+  reference.delete_prefix('#/').split('/').reduce(document) do |node, token|
+    key = token.gsub('~1', '/').gsub('~0', '~')
+
+    case node
+    when Hash
+      break unless node.key?(key)
+
+      node[key]
+    when Array
+      break unless key.match?(/\A(?:0|[1-9]\d*)\z/) && key.to_i < node.length
+
+      node[key.to_i]
+    else
+      break
+    end
+  end
+end
+
+def validate_local_references(node, document, path, errors)
+  case node
+  when Hash
+    reference = node['$ref']
+    if reference.is_a?(String) && reference.start_with?('#') && resolve_json_pointer(document, reference).nil?
+      errors << "spec.yaml #{path} contains unresolved local reference `#{reference}`"
+    end
+
+    node.each do |key, value|
+      validate_local_references(value, document, "#{path}.#{key}", errors)
+    end
+  when Array
+    node.each_with_index do |value, index|
+      validate_local_references(value, document, "#{path}[#{index}]", errors)
     end
   end
 end
@@ -160,6 +206,7 @@ end
 
 validate_property_descriptions(spec, 'spec', errors)
 validate_required_properties(spec, 'spec', errors)
+validate_local_references(spec, spec, 'spec', errors)
 
 paths.each do |path, methods|
   methods.each do |method, operation|
@@ -236,6 +283,11 @@ paths.each do |path, methods|
     end
 
     responses.each do |status, response|
+      description = response.fetch('description', '').to_s.strip
+      if description.empty?
+        errors << "#{method_name} #{path} #{status} response missing description"
+      end
+
       next if status.to_s.start_with?('2')
 
       schema = response.dig('content', 'application/json', 'schema')

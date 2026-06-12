@@ -7,6 +7,7 @@ lint:
 	scripts/validate-openapi.rb
 
 test: lint
+	scripts/test-validator.sh
 
 build: lint
 

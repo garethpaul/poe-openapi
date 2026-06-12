@@ -1,9 +1,27 @@
 # Changes
 
+## 2026-06-12
+
+- Added response-description validation so missing or whitespace-only OpenAPI
+  response descriptions fail before reaching generated documentation.
+- Added a dependency-free mutation test and wired it through `make test` and
+  the canonical `make check` gate.
+- Disabled persisted checkout credentials and made the baseline enforce the
+  exact hosted OpenAPI workflow contract.
+- Pinned Ruby setup and added hosted Ruby 2.7 and Ruby 3.3 validation lanes.
+- Expanded validator mutations to reject dangling local references and accept
+  correctly escaped JSON Pointer tokens.
+
 ## 2026-06-10
 
+- Added hosted OpenAPI contract validation with read-only permissions and a
+  pinned checkout action.
+- Made the OpenAPI validator independent of the caller's working directory and
+  protected that behavior in the scripted baseline check.
 - Added security-scheme description validation so generated OpenAPI docs keep
   authentication semantics attached to each scheme.
+- Added recursive local-reference validation so dangling OpenAPI JSON Pointers
+  fail before they reach documentation or client generators.
 
 ## 2026-06-09
 
