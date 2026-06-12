@@ -57,6 +57,9 @@ Checkout uses `persist-credentials: false`, and the baseline enforces the exact
 workflow text to reject extra actions or shadowed security settings.
 Hosted validation pins Ruby setup and covers Ruby 2.7 plus Ruby 3.3 so the gate
 does not inherit an unreviewed runtime from the runner image.
+Every OpenAPI `$ref` must be a local string and resolve within `spec.yaml`, so
+validation and generated tooling cannot silently depend on remote or adjacent
+files outside the reviewed contract.
 
 ## Dependency and Supply Chain Security
 

@@ -35,6 +35,7 @@ for path in \
   "docs/plans/2026-06-10-local-reference-validation.md" \
   "docs/plans/2026-06-12-credential-free-openapi-validation.md" \
   "docs/plans/2026-06-12-response-description-validation.md" \
+  "docs/plans/2026-06-12-self-contained-reference-validation.md" \
   ".github/workflows/check.yml" \
   "scripts/check-baseline.sh"; do
   require_file "$path"
@@ -77,7 +78,12 @@ if ! grep -Fq 'Ruby and `make`' "$README"; then
   exit 1
 fi
 
-for documented in "make check" "make build" "scripts/check-baseline.sh" "Every OpenAPI response must include a non-empty"; do
+for documented in \
+  "make check" \
+  "make build" \
+  "scripts/check-baseline.sh" \
+  'Every OpenAPI `$ref` must be a local string' \
+  "Every OpenAPI response must include a non-empty"; do
   if ! grep -Fq "$documented" "$README"; then
     printf '%s\n' "README must document $documented." >&2
     exit 1
@@ -89,10 +95,17 @@ if ! grep -Fq "docs/plans/2026-06-09-scripted-baseline-check.md" "$VALIDATOR"; t
   exit 1
 fi
 
+if ! grep -Fq "docs/plans/2026-06-12-self-contained-reference-validation.md" "$VALIDATOR"; then
+  printf '%s\n' "OpenAPI validator must include the self-contained reference plan." >&2
+  exit 1
+fi
+
 for validator_contract in \
   "response missing description" \
   "def resolve_json_pointer" \
-  "validate_local_references(spec, spec"; do
+  "contains non-local reference" \
+  '$ref must be a string' \
+  "validate_references(spec, spec"; do
   if ! grep -Fq "$validator_contract" "$VALIDATOR"; then
     printf '%s\n' "OpenAPI validator must preserve: $validator_contract" >&2
     exit 1
@@ -102,6 +115,10 @@ done
 for mutation_contract in \
   "whitespace-only response description" \
   "dangling local reference" \
+  "external URL reference" \
+  "relative file reference" \
+  "malformed local reference" \
+  "non-string reference" \
   "Escaped~1Schema~0Name"; do
   if ! grep -Fq "$mutation_contract" "$ROOT_DIR/scripts/test-validator.sh"; then
     printf '%s\n' "Validator mutation tests must preserve: $mutation_contract" >&2

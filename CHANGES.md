@@ -11,6 +11,8 @@
 - Pinned Ruby setup and added hosted Ruby 2.7 and Ruby 3.3 validation lanes.
 - Expanded validator mutations to reject dangling local references and accept
   correctly escaped JSON Pointer tokens.
+- Required every OpenAPI `$ref` to be a resolvable local string, rejecting
+  external URLs, relative files, and non-string values.
 
 ## 2026-06-10
 

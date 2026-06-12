@@ -68,6 +68,50 @@ require 'yaml'
 
 path = ARGV.fetch(0)
 spec = YAML.safe_load(File.read(path), aliases: true)
+spec['x-validation-reference'] = { '$ref' => 'https://example.com/shared.yaml#/Error' }
+File.write(path, YAML.dump(spec))
+RUBY
+assert_rejected "external URL reference" "contains non-local reference"
+
+cp "$ROOT_DIR/spec.yaml" "$TMP_DIR/spec.yaml"
+ruby - "$TMP_DIR/spec.yaml" <<'RUBY'
+require 'yaml'
+
+path = ARGV.fetch(0)
+spec = YAML.safe_load(File.read(path), aliases: true)
+spec['x-validation-reference'] = { '$ref' => '../shared.yaml#/Error' }
+File.write(path, YAML.dump(spec))
+RUBY
+assert_rejected "relative file reference" "contains non-local reference"
+
+cp "$ROOT_DIR/spec.yaml" "$TMP_DIR/spec.yaml"
+ruby - "$TMP_DIR/spec.yaml" <<'RUBY'
+require 'yaml'
+
+path = ARGV.fetch(0)
+spec = YAML.safe_load(File.read(path), aliases: true)
+spec['x-validation-reference'] = { '$ref' => '#components/schemas/Error' }
+File.write(path, YAML.dump(spec))
+RUBY
+assert_rejected "malformed local reference" "contains invalid local reference"
+
+cp "$ROOT_DIR/spec.yaml" "$TMP_DIR/spec.yaml"
+ruby - "$TMP_DIR/spec.yaml" <<'RUBY'
+require 'yaml'
+
+path = ARGV.fetch(0)
+spec = YAML.safe_load(File.read(path), aliases: true)
+spec['x-validation-reference'] = { '$ref' => { 'path' => '#/components/schemas/Error' } }
+File.write(path, YAML.dump(spec))
+RUBY
+assert_rejected "non-string reference" '$ref must be a string'
+
+cp "$ROOT_DIR/spec.yaml" "$TMP_DIR/spec.yaml"
+ruby - "$TMP_DIR/spec.yaml" <<'RUBY'
+require 'yaml'
+
+path = ARGV.fetch(0)
+spec = YAML.safe_load(File.read(path), aliases: true)
 spec.fetch('components').fetch('schemas')['Escaped/Schema~Name'] = {
   'type' => 'object',
   'description' => 'Schema used to verify escaped JSON Pointer tokens.'

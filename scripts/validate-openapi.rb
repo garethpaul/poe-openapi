@@ -20,7 +20,8 @@ PLANS = [
   'docs/plans/2026-06-09-scripted-baseline-check.md',
   'docs/plans/2026-06-10-hosted-openapi-validation.md',
   'docs/plans/2026-06-10-local-reference-validation.md',
-  'docs/plans/2026-06-12-response-description-validation.md'
+  'docs/plans/2026-06-12-response-description-validation.md',
+  'docs/plans/2026-06-12-self-contained-reference-validation.md'
 ].freeze
 
 spec = YAML.safe_load(File.read('spec.yaml'), aliases: true)
@@ -97,20 +98,28 @@ def resolve_json_pointer(document, reference)
   end
 end
 
-def validate_local_references(node, document, path, errors)
+def validate_references(node, document, path, errors)
   case node
   when Hash
-    reference = node['$ref']
-    if reference.is_a?(String) && reference.start_with?('#') && resolve_json_pointer(document, reference).nil?
-      errors << "spec.yaml #{path} contains unresolved local reference `#{reference}`"
+    if node.key?('$ref')
+      reference = node['$ref']
+      if !reference.is_a?(String)
+        errors << "spec.yaml #{path} $ref must be a string"
+      elsif !reference.start_with?('#')
+        errors << "spec.yaml #{path} contains non-local reference `#{reference}`"
+      elsif reference != '#' && !reference.start_with?('#/')
+        errors << "spec.yaml #{path} contains invalid local reference `#{reference}`"
+      elsif resolve_json_pointer(document, reference).nil?
+        errors << "spec.yaml #{path} contains unresolved local reference `#{reference}`"
+      end
     end
 
     node.each do |key, value|
-      validate_local_references(value, document, "#{path}.#{key}", errors)
+      validate_references(value, document, "#{path}.#{key}", errors)
     end
   when Array
     node.each_with_index do |value, index|
-      validate_local_references(value, document, "#{path}[#{index}]", errors)
+      validate_references(value, document, "#{path}[#{index}]", errors)
     end
   end
 end
@@ -206,7 +215,7 @@ end
 
 validate_property_descriptions(spec, 'spec', errors)
 validate_required_properties(spec, 'spec', errors)
-validate_local_references(spec, spec, 'spec', errors)
+validate_references(spec, spec, 'spec', errors)
 
 paths.each do |path, methods|
   methods.each do |method, operation|
