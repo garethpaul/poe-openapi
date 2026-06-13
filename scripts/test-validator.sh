@@ -51,6 +51,44 @@ assert_rejected "whitespace-only response description" "POST /stream-to-poe 200 
 mutate_description missing
 assert_rejected "missing response description" "POST /stream-to-poe 200 response missing description"
 
+mutate_operation_id() {
+  mode=$1
+  cp "$ROOT_DIR/spec.yaml" "$TMP_DIR/spec.yaml"
+  ruby - "$TMP_DIR/spec.yaml" "$mode" <<'RUBY'
+require 'yaml'
+
+path = ARGV.fetch(0)
+spec = YAML.safe_load(File.read(path), aliases: true)
+operations = spec.fetch('paths')
+first = operations.fetch('/stream-to-poe').fetch('post')
+
+case ARGV.fetch(1)
+when 'missing'
+  first.delete('operationId')
+when 'whitespace'
+  first['operationId'] = '   '
+when 'non-string'
+  first['operationId'] = 123
+when 'duplicate'
+  operations.fetch('/poe-to-stream').fetch('post')['operationId'] = first.fetch('operationId')
+end
+
+File.write(path, YAML.dump(spec))
+RUBY
+}
+
+mutate_operation_id missing
+assert_rejected "missing operation ID" "POST /stream-to-poe operationId must be a non-empty string"
+
+mutate_operation_id whitespace
+assert_rejected "whitespace-only operation ID" "POST /stream-to-poe operationId must be a non-empty string"
+
+mutate_operation_id non-string
+assert_rejected "non-string operation ID" "POST /stream-to-poe operationId must be a non-empty string"
+
+mutate_operation_id duplicate
+assert_rejected "duplicate operation ID" "duplicate operationId values: convertSseToPoe"
+
 cp "$ROOT_DIR/spec.yaml" "$TMP_DIR/spec.yaml"
 ruby - "$TMP_DIR/spec.yaml" <<'RUBY'
 require 'yaml'
