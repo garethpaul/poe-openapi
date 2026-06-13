@@ -65,6 +65,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   request-field documentation, response status documentation,
   security scheme, and shared
   error-response coverage against `spec.md`.
+- Every operation ID must be a non-empty string, remain unique across the
+  specification, and match the corresponding Markdown endpoint section.
 - Every top-level JSON request-body property, required or optional, must stay
   named in the matching Markdown endpoint section.
 - Example `example.com` servers must stay explicitly marked as placeholders in

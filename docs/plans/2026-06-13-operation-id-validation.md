@@ -2,7 +2,7 @@
 
 ## Status
 
-Planned
+Completed
 
 ## Context
 
@@ -45,7 +45,7 @@ keeping malformed specifications inside the validator's normal error path.
 - Do not add Ruby gems or another OpenAPI parser.
 - Do not generate or rewrite `spec.md` in this focused change.
 
-## Planned Verification
+## Verification
 
 - `ruby -c scripts/validate-openapi.rb`
 - `scripts/test-validator.sh`
@@ -54,3 +54,16 @@ keeping malformed specifications inside the validator's normal error path.
 - `make build`
 - `make check`
 - `git diff --check`
+
+All commands completed successfully on June 13, 2026.
+
+## Work Completed
+
+- Required every operation ID to be a non-empty string before it is collected
+  for repository-wide uniqueness validation.
+- Added mutation tests for missing, whitespace-only, non-string, and duplicate
+  operation IDs with stable expected diagnostics.
+- Made the repository baseline preserve both the validator rules and mutation
+  coverage.
+- Documented the strengthened operation ID contract in README, VISION, and
+  CHANGES.
