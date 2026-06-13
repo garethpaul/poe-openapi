@@ -39,6 +39,8 @@ Priority:
 - Keep the Markdown Security section aligned with OpenAPI security schemes
 - Keep OpenAPI security schemes self-describing for generated docs
 - Require every operation to declare an explicit security requirement
+- Accept standard Path Item metadata while rejecting unsupported or malformed
+  path and operation structures
 - Keep component schemas and their properties self-describing for generated
   docs and clients
 - Make placeholder servers and support contacts obvious

@@ -1,6 +1,8 @@
 # Validate OpenAPI Path Item Shapes
 
-status: planned
+## Status
+
+Completed
 
 ## Summary
 
@@ -64,7 +66,7 @@ Ruby exception.
 
 ## Verification Plan
 
-- Ruby 2.7 and Ruby 3.3 syntax and all Make gates
+- Ruby 2.7 and Ruby 3.3 syntax plus `make check` and all other Make gates
 - focused accepted-metadata and malformed-shape assertions
 - checker execution from an external working directory
 - hostile mutations covering method filtering, metadata keys, shape guards,
@@ -74,8 +76,24 @@ Ruby exception.
 
 ## Work Completed
 
-Pending implementation.
+- Added explicit standard HTTP method and Path Item field sets so metadata no
+  longer enters operation validation.
+- Added stable validation errors for unsupported Path Item keys, non-object
+  Path Items, and non-object HTTP operations before field access.
+- Added deterministic accepted-metadata and malformed-shape regressions while
+  preserving all existing operation ID, response, security, and reference tests.
+- Extended baseline contracts and public guidance without changing the API
+  specification, Markdown reference, workflow, dependencies, or Make surface.
 
 ## Verification Completed
 
-Pending implementation and verification.
+- Ruby 2.7 and Ruby 3.3 `make check` passed in network-disabled, read-only
+  containers with executable temporary storage for the mutation harness.
+- Ruby and shell syntax, focused validator assertions, all Make gates, and an
+  external-working-directory completed-copy check passed.
+- Ten hostile mutations rejected method filtering, metadata allowlisting,
+  unknown-field handling, both shape guards, accepted and malformed tests,
+  guidance, plan status, and verification evidence.
+- `git diff --check` passed. Exact-base comparison confirmed `spec.yaml`,
+  `spec.md`, workflow, Makefile, ignore rules, and dependencies were unchanged;
+  the secret, captured-prompt, generated-artifact, specification, and dependency scan passed.
