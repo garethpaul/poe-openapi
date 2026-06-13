@@ -10,8 +10,10 @@ trap 'rm -rf "$TMP_DIR"' EXIT HUP INT TERM
 
 mkdir -p "$TMP_DIR/scripts" "$TMP_DIR/docs"
 cp "$VALIDATOR" "$TMP_DIR/scripts/validate-openapi.rb"
+cp "$ROOT_DIR/scripts/generate-spec-md.rb" "$TMP_DIR/scripts/generate-spec-md.rb"
 cp "$ROOT_DIR/spec.md" "$TMP_DIR/spec.md"
 cp -R "$ROOT_DIR/docs/plans" "$TMP_DIR/docs/plans"
+chmod +x "$TMP_DIR/scripts/generate-spec-md.rb"
 
 assert_rejected() {
   label=$1
@@ -102,6 +104,7 @@ path_item['servers'] = [{ 'url' => 'https://api.example.com/v1' }]
 path_item['parameters'] = []
 File.write(path, YAML.dump(spec))
 RUBY
+"$TMP_DIR/scripts/generate-spec-md.rb" >/dev/null
 if ! "$TMP_DIR/scripts/validate-openapi.rb" >/dev/null; then
   printf '%s\n' "Validator rejected standard Path Item metadata." >&2
   exit 1

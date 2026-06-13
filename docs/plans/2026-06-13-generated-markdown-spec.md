@@ -1,6 +1,8 @@
 # Generated Markdown Specification
 
-status: pending
+## Status
+
+Completed
 
 ## Context
 
@@ -43,8 +45,20 @@ Markdown contract data derive from the YAML rather than parallel edits.
 
 ## Work Completed
 
-Pending implementation.
+- Added dependency-free `scripts/generate-spec-md.rb` generation and exact
+  `--check` drift detection for `spec.md`.
+- Wired generation through `make generate`, the canonical validator, mutation
+  tests, and the scripted baseline contract.
+- Documented `spec.yaml` as the hand-edited source and regenerated the complete
+  Markdown reference without changing the OpenAPI contract or workflow.
 
 ## Verification Completed
 
-Pending implementation and validation.
+- Ruby and shell syntax checks passed on Ruby 2.7.
+- The focused generator suite passed; stale output, unsupported arguments, and
+  metadata, operation, request-field, response, security, and error-example
+  hostile mutations rejected incorrect or incomplete generation.
+- `make check` passed on Ruby 2.7 and Ruby 3.3; the Ruby 3.3 run used a
+  read-only, network-isolated container with the repository mounted at its
+  canonical worktree path.
+- `git diff --check` and the repository's secret, captured-prompt, generated-artifact, specification, and dependency scan passed.
