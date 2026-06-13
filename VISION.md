@@ -16,7 +16,7 @@ The current focus is:
 Priority:
 
 - Preserve `spec.yaml` as the source API contract
-- Keep `spec.md` aligned with the YAML specification
+- Generate `spec.md` deterministically from the YAML specification
 - Maintain `make check`, `make verify`, and `make build` as the local OpenAPI
   consistency gates
 - Run the canonical dependency-free OpenAPI gate in hosted CI with read-only
@@ -50,16 +50,13 @@ Priority:
 
 Next priorities:
 
-- Add generation steps for producing Markdown from the YAML spec
 - Replace example hostnames only when a real deployment exists
 - Add example request and response fixtures for each endpoint
-- Add generated reference output that preserves component and property
-  descriptions
 
 Contribution rules:
 
 - One PR = one focused endpoint, schema, auth, example, or docs change.
-- Update both YAML and Markdown outputs together.
+- Update `spec.yaml`, then regenerate the Markdown output.
 - Do not claim production availability without a real server.
 - Keep protocol examples minimal and machine-checkable.
 

@@ -62,6 +62,9 @@ does not inherit an unreviewed runtime from the runner image.
 Every OpenAPI `$ref` must be a local string and resolve within `spec.yaml`, so
 validation and generated tooling cannot silently depend on remote or adjacent
 files outside the reviewed contract.
+The Markdown reference is generated deterministically from `spec.yaml`; review
+security-sensitive contract changes in the YAML source and let `make check`
+reject stale or hand-edited output.
 
 ## Dependency and Supply Chain Security
 
