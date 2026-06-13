@@ -45,6 +45,8 @@ not silently drop or invent request behavior.
 Every OpenAPI operation should declare a non-empty security requirement so
 generated clients and implementers do not treat protected endpoints as public by
 omission.
+Path Item metadata must remain separate from HTTP operations, and unsupported or
+non-object path structures must fail before operation security fields are read.
 Security schemes should carry explicit OpenAPI descriptions so generated docs
 show whether credentials are supplied by header or bearer token.
 Response objects should keep non-empty descriptions so implementers can

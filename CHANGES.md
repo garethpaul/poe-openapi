@@ -2,6 +2,8 @@
 
 ## 2026-06-13
 
+- Accepted standard OpenAPI Path Item metadata without treating it as an HTTP
+  operation and added stable errors for unsupported or non-object structures.
 - Strengthened operation ID validation to reject missing, blank, and
   non-string values with stable diagnostics while preserving uniqueness.
 - Added dependency-free mutations for malformed and duplicate operation IDs.
