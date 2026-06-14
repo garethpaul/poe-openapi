@@ -10,6 +10,7 @@ GENERATOR="$ROOT_DIR/scripts/generate-spec-md.rb"
 DOCS_PLANS="$ROOT_DIR/docs/plans"
 PATH_ITEM_PLAN="$DOCS_PLANS/2026-06-13-path-item-metadata-validation.md"
 GENERATED_MARKDOWN_PLAN="$DOCS_PLANS/2026-06-13-generated-markdown-spec.md"
+LOCATION_INDEPENDENT_MAKE_PLAN="$DOCS_PLANS/2026-06-14-location-independent-make.md"
 WORKFLOW="$ROOT_DIR/.github/workflows/check.yml"
 
 require_file() {
@@ -44,6 +45,7 @@ for path in \
   "docs/plans/2026-06-13-operation-id-validation.md" \
   "docs/plans/2026-06-13-path-item-metadata-validation.md" \
   "docs/plans/2026-06-13-generated-markdown-spec.md" \
+  "docs/plans/2026-06-14-location-independent-make.md" \
   ".github/workflows/check.yml" \
   "scripts/check-baseline.sh"; do
   require_file "$path"
@@ -69,34 +71,39 @@ if ! [ -x "$ROOT_DIR/scripts/test-validator.sh" ]; then
   exit 1
 fi
 
-if ! grep -Fq "scripts/check-baseline.sh" "$MAKEFILE"; then
-  printf '%s\n' "Makefile must run scripts/check-baseline.sh from make check." >&2
-  exit 1
-fi
-
-if ! grep -Fq "scripts/validate-openapi.rb" "$MAKEFILE"; then
-  printf '%s\n' "Makefile must expose the OpenAPI validator." >&2
-  exit 1
-fi
-
-if ! grep -Fq "scripts/test-validator.sh" "$MAKEFILE"; then
-  printf '%s\n' "Makefile must run validator mutation tests." >&2
-  exit 1
-fi
-
-if ! grep -Fq "scripts/generate-spec-md.rb" "$MAKEFILE"; then
-  printf '%s\n' "Makefile must expose deterministic Markdown generation." >&2
-  exit 1
-fi
-
-if ! grep -Fq "scripts/test-generator.sh" "$MAKEFILE"; then
-  printf '%s\n' "Makefile must run generated Markdown mutation tests." >&2
-  exit 1
-fi
-
 for target in "generate:" "lint:" "test:" "build:" "verify:" "check:"; do
   if ! grep -Fq "$target" "$MAKEFILE"; then
     printf '%s\n' "Makefile must expose the $target gate." >&2
+    exit 1
+  fi
+done
+
+for make_contract in \
+  'override REPO_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))' \
+  'generate: $(REPO_ROOT)/scripts/generate-spec-md.rb $(REPO_ROOT)/spec.yaml' \
+  'cd "$(REPO_ROOT)" && scripts/check-baseline.sh' \
+  'cd "$(REPO_ROOT)" && scripts/generate-spec-md.rb' \
+  'cd "$(REPO_ROOT)" && scripts/validate-openapi.rb' \
+  'cd "$(REPO_ROOT)" && scripts/test-validator.sh' \
+  'cd "$(REPO_ROOT)" && scripts/test-generator.sh'; do
+  if ! grep -Fq "$make_contract" "$MAKEFILE"; then
+    printf '%s\n' "Makefile must remain caller-directory independent: $make_contract" >&2
+    exit 1
+  fi
+done
+
+for evidence in \
+  '## Status Completed' \
+  'Ruby 2.7.0' \
+  'Ruby 3.3' \
+  'absolute Makefile path from /tmp' \
+  'REPO_ROOT=/tmp' \
+  'byte-identical' \
+  'seven isolated hostile mutations' \
+  'git diff --check' \
+  'credential-pattern'; do
+  if ! grep -Fq "$evidence" "$LOCATION_INDEPENDENT_MAKE_PLAN"; then
+    printf '%s\n' "Location-independent Make plan must preserve evidence: $evidence" >&2
     exit 1
   fi
 done

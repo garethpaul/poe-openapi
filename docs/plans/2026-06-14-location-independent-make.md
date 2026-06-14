@@ -6,7 +6,7 @@ date: 2026-06-14
 
 # Location-Independent Make Gates
 
-status: planned
+## Status Completed
 
 ## Summary
 
@@ -84,3 +84,27 @@ and record completed evidence after final validation.
 Completion requires root and external gates on Ruby 2.7 and 3.3, byte-identical
 external generation, seven isolated hostile Make mutations, syntax and YAML
 checks, and exact protected-specification audits.
+
+## Work Completed
+
+- Added an override-protected repository root and used it for generator
+  prerequisites plus check, generate, lint, and both mutation-test recipes.
+- Extended the baseline checker to require the root declaration, rooted
+  generator inputs, and every rooted script command exactly.
+- Preserved specification content, generated format, workflows, dependencies,
+  and supported Ruby behavior.
+
+## Verification Completed
+
+- Ruby 2.7.0 passed all Make aliases, including `make check`, from the repository
+  root and through the absolute Makefile path from /tmp with a hostile
+  `REPO_ROOT=/tmp` override.
+- Ruby 3.3 `make check` passed externally in a read-only, network-isolated
+  container with executable temporary fixtures and read-only Git metadata.
+- External generation completed and left `spec.md` byte-identical at SHA-256
+  `6371186f648a79f0fa870709fc0f987b7877719672b0e048f0ef1be0f76edc7e`.
+- The checker rejected seven isolated hostile mutations covering root
+  derivation, generator prerequisites, and every rooted script recipe.
+- Ruby and POSIX shell syntax, YAML parsing, `git diff --check`, intended-path,
+  generated-artifact, credential-pattern, dependency, workflow, prior-plan,
+  `spec.yaml`, and `spec.md` preservation checks passed.
