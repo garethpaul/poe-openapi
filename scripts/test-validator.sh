@@ -62,6 +62,68 @@ assert_cycle_rejected() {
   fi
 }
 
+assert_parser_recursion_rejected() {
+  call_log="$TMP_DIR/generator-call"
+  rm -f "$call_log"
+  if output=$(GENERATOR_CALL_LOG="$call_log" ruby -rtimeout -e \
+    'Timeout.timeout(5) { load ARGV.fetch(0) }' \
+    "$TMP_DIR/scripts/validate-openapi.rb" 2>&1); then
+    printf '%s\n' 'Validator accepted YAML beyond the parser nesting limit.' >&2
+    exit 1
+  fi
+  if [ "$output" != "spec.yaml exceeds the YAML parser nesting limit" ]; then
+    printf '%s\n%s\n' 'Validator returned the wrong parser recursion error:' "$output" >&2
+    exit 1
+  fi
+  if [ -e "$call_log" ]; then
+    printf '%s\n' 'The generator must not run after YAML parser recursion failure.' >&2
+    exit 1
+  fi
+}
+
+cp "$ROOT_DIR/spec.yaml" "$TMP_DIR/spec.yaml"
+ruby - "$TMP_DIR/spec.yaml" <<'RUBY'
+path = ARGV.fetch(0)
+File.open(path, 'a') do |file|
+  file.puts 'x-deep-acyclic:'
+  1.upto(2_000) { |index| file.puts(('  ' * index) + "level#{index}:") }
+  file.puts(('  ' * 2_001) + 'value: leaf')
+end
+RUBY
+assert_parser_recursion_rejected
+
+cp "$ROOT_DIR/spec.yaml" "$TMP_DIR/spec.yaml"
+ruby - "$TMP_DIR/spec.yaml" <<'RUBY'
+path = ARGV.fetch(0)
+File.open(path, 'a') do |file|
+  file.puts 'x-shallow-acyclic:'
+  1.upto(100) { |index| file.puts(('  ' * index) + "level#{index}:") }
+  file.puts(('  ' * 101) + 'value: leaf')
+end
+RUBY
+if ! "$TMP_DIR/scripts/validate-openapi.rb" >/dev/null; then
+  printf '%s\n' 'Validator rejected a shallow acyclic YAML mapping.' >&2
+  exit 1
+fi
+
+cp "$ROOT_DIR/spec.yaml" "$TMP_DIR/spec.yaml"
+printf '\nx-invalid: [\n' >> "$TMP_DIR/spec.yaml"
+if output=$("$TMP_DIR/scripts/validate-openapi.rb" 2>&1); then
+  printf '%s\n' 'Validator accepted malformed YAML.' >&2
+  exit 1
+fi
+case "$output" in
+  *'Psych::SyntaxError'*) ;;
+  *)
+    printf '%s\n%s\n' 'Malformed YAML did not preserve its syntax error:' "$output" >&2
+    exit 1
+    ;;
+esac
+if printf '%s\n' "$output" | grep -Fq 'spec.yaml exceeds the YAML parser nesting limit'; then
+  printf '%s\n' 'Malformed YAML was mislabeled as parser recursion.' >&2
+  exit 1
+fi
+
 cp "$ROOT_DIR/spec.yaml" "$TMP_DIR/spec.yaml"
 cat >> "$TMP_DIR/spec.yaml" <<'YAML'
 x-cyclic-alias: &cyclic-alias

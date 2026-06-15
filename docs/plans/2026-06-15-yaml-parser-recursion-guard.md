@@ -2,10 +2,14 @@
 title: YAML parser recursion guard
 date: 2026-06-15
 type: implementation
-status: planned
+status: completed
 ---
 
 # YAML Parser Recursion Guard
+
+## Status
+
+Completed
 
 ## Problem Frame
 
@@ -22,8 +26,9 @@ the supported Ruby 2.7 and 3.3 contract.
 
 - R1. Convert `SystemStackError` raised while loading `spec.yaml` into one
   stable, actionable diagnostic and a nonzero exit without a Ruby backtrace.
-- R2. Scope the rescue to YAML loading so recursion defects in later validator
-  code are not mislabeled as parser-depth failures.
+- R2. Scope the rescue to `YAML.safe_load` itself so file-read failures and
+  recursion defects in later validator code are not mislabeled as parser-depth
+  failures.
 - R3. Preserve Psych syntax-error behavior and the existing exact cyclic-alias
   diagnostic and pre-generator ordering.
 - R4. Add a bounded deep acyclic fixture that reproduces parser recursion
@@ -89,18 +94,28 @@ the supported Ruby 2.7 and 3.3 contract.
   diagnostic, bypass the fixture, remove the timeout or generator assertion,
   or restore provisional plan language are rejected.
 
-## Verification Plan
+## Verification Completed
 
-- Run Ruby syntax and POSIX shell syntax checks plus the focused validator
-  suite.
-- Run `make check` from the repository root and through the absolute Makefile
-  path from an unrelated directory on Ruby 2.7.
-- Run the complete gate on Ruby 3.3 in a network-disabled container.
-- Run isolated hostile mutations for implementation, test wiring, diagnostics,
-  rescue scope, and plan evidence.
-- Audit the exact diff, generated artifacts, credential patterns, conflict
-  markers, dependency and workflow drift, and the SHA-256 values of
-  `spec.yaml` and `spec.md` before commit.
+- Ruby 2.7.0 passed syntax checks, the focused validator suite, repository
+  `make check`, and the absolute-Makefile `make check` from an unrelated
+  directory.
+- Ruby 3.3.11 passed the focused validator suite and complete `make check` in
+  the official network-disabled container with the repository mounted
+  read-only.
+- A 2,000-level acyclic mapping returned exactly
+  `spec.yaml exceeds the YAML parser nesting limit` within five seconds and
+  before generator execution; a 100-level acyclic mapping remained accepted.
+- Malformed YAML continued to report `Psych::SyntaxError` and was not
+  mislabeled as parser recursion.
+- Twelve isolated hostile mutations were rejected across rescue presence and
+  scope, parser assignment, diagnostic stability, timeout and generator
+  assertions, fixture depth and invocation, syntax-error distinction, plan
+  registration, and completed evidence.
+- Final `git diff --check`, generated-artifact, credential-pattern,
+  conflict-marker, dependency-drift, workflow, and specification audits passed.
+  `spec.yaml` and `spec.md` remained byte-identical at SHA-256
+  `5b84534b62a346a35b99a3c2253931cef63ab2bcd6ab602b5d4f2d7d6a967f0a`
+  and `6371186f648a79f0fa870709fc0f987b7877719672b0e048f0ef1be0f76edc7e`.
 
 ## Risks
 
