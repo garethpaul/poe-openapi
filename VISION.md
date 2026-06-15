@@ -1,5 +1,7 @@
 ## Poe OpenAPI Vision
 
+- Keep generator parser recursion failures bounded before output replacement.
+
 Poe OpenAPI is an OpenAPI specification and Markdown reference for an adapter
 that converts between Server-Sent Events streams and Poe Protocol request and
 response shapes.

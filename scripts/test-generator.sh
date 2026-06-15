@@ -11,6 +11,27 @@ cp "$ROOT_DIR/spec.yaml" "$ROOT_DIR/spec.md" "$WORK_DIR/"
 chmod +x "$WORK_DIR/scripts/generate-spec-md.rb"
 
 "$ROOT_DIR/scripts/generate-spec-md.rb" --check
+cp "$ROOT_DIR/spec.yaml" "$WORK_DIR/spec.yaml"
+cp "$WORK_DIR/spec.md" "$WORK_DIR/spec.md.before-recursion"
+ruby - "$WORK_DIR/spec.yaml" <<'RUBY'
+path = ARGV.fetch(0)
+File.open(path, 'a') do |file|
+  file.puts 'x-deep-acyclic:'
+  1.upto(2_000) { |index| file.puts(('  ' * index) + "level#{index}:") }
+  file.puts(('  ' * 2_001) + 'value: leaf')
+end
+RUBY
+if output=$(ruby -rtimeout -e 'path = ARGV.shift; Timeout.timeout(5) { load path }' \
+  "$WORK_DIR/scripts/generate-spec-md.rb" 2>&1); then
+  printf '%s\n' 'generator accepted YAML beyond the parser nesting limit' >&2
+  exit 1
+fi
+if [ "$output" != "spec.yaml exceeds the YAML generator parser nesting limit" ]; then
+  printf '%s\n%s\n' 'generator returned the wrong parser recursion error:' "$output" >&2
+  exit 1
+fi
+cmp "$WORK_DIR/spec.md.before-recursion" "$WORK_DIR/spec.md"
+cp "$ROOT_DIR/spec.yaml" "$WORK_DIR/spec.yaml"
 printf '%s\n' '<!-- drift -->' >> "$WORK_DIR/spec.md"
 if output=$("$WORK_DIR/scripts/generate-spec-md.rb" --check 2>&1); then
   printf '%s\n' 'generator check accepted stale Markdown' >&2

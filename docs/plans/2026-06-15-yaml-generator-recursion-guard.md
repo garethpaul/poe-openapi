@@ -1,7 +1,7 @@
 ---
 title: YAML Generator Recursion Guard
 type: reliability
-status: in_progress
+status: completed
 date: 2026-06-15
 execution: code
 ---
@@ -50,3 +50,24 @@ nonzero diagnostic.
 - No network access, private schema, or dependency change will be used.
 - Keep this change stacked on PR #8; do not merge or close stacked pull
   requests without explicit authorization.
+
+## Status
+
+Completed
+
+## Work Completed
+
+- Read `spec.yaml` outside the generator parser rescue boundary.
+- Convert only `SystemStackError` to one stable generator diagnostic.
+- Prove deep parser failure leaves `spec.md` byte-identical.
+
+## Verification Completed
+
+- The focused generator contract fixture passed on the available Ruby runtime.
+- All four Make gates passed, and `make check` passed from an external directory.
+- Six isolated hostile mutations were rejected for a removed rescue, changed
+  diagnostic, broadened exception handling, removed output assertion, missing
+  guidance, and reopened plan status.
+- Exact diff, generated output, credential, dependency, conflict, binary,
+  large-file, mode, whitespace, and intended-path audits passed.
+- No network access, private schema, or dependency change was used.
