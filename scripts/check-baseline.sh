@@ -10,6 +10,7 @@ GENERATOR="$ROOT_DIR/scripts/generate-spec-md.rb"
 DOCS_PLANS="$ROOT_DIR/docs/plans"
 PATH_ITEM_PLAN="$DOCS_PLANS/2026-06-13-path-item-metadata-validation.md"
 GENERATED_MARKDOWN_PLAN="$DOCS_PLANS/2026-06-13-generated-markdown-spec.md"
+CYCLIC_ALIAS_PLAN="$DOCS_PLANS/2026-06-15-cyclic-yaml-alias-validation.md"
 LOCATION_INDEPENDENT_MAKE_PLAN="$DOCS_PLANS/2026-06-14-location-independent-make.md"
 WORKFLOW="$ROOT_DIR/.github/workflows/check.yml"
 
@@ -45,6 +46,7 @@ for path in \
   "docs/plans/2026-06-13-operation-id-validation.md" \
   "docs/plans/2026-06-13-path-item-metadata-validation.md" \
   "docs/plans/2026-06-13-generated-markdown-spec.md" \
+  "docs/plans/2026-06-15-cyclic-yaml-alias-validation.md" \
   "docs/plans/2026-06-14-location-independent-make.md" \
   ".github/workflows/check.yml" \
   "scripts/check-baseline.sh"; do
@@ -198,6 +200,90 @@ for validator_contract in \
     exit 1
   fi
 done
+
+for cycle_contract in \
+  'def cyclic_object_graph?' \
+  'stack = [[:enter, root]]' \
+  'action, node = stack.pop' \
+  'return true if visiting[object_id]' \
+  'next if visited[object_id]' \
+  'stack << [:exit, node]' \
+  'stack << [:enter, value]' \
+  'stack << [:enter, key]' \
+  'visiting.delete(object_id)' \
+  'visited[object_id] = true' \
+  'if cyclic_object_graph?(spec)' \
+  'spec.yaml contains cyclic YAML aliases'; do
+  if ! grep -Fq "$cycle_contract" "$VALIDATOR"; then
+    printf '%s\n' "OpenAPI validator must preserve cyclic-alias protection: $cycle_contract" >&2
+    exit 1
+  fi
+done
+
+cycle_check_line=$(grep -nF 'if cyclic_object_graph?(spec)' "$VALIDATOR" | cut -d: -f1)
+generator_line=$(grep -nF "generator = File.join(ROOT_DIR, 'scripts/generate-spec-md.rb')" "$VALIDATOR" | cut -d: -f1)
+if [ -z "$cycle_check_line" ] || [ -z "$generator_line" ] || [ "$cycle_check_line" -ge "$generator_line" ]; then
+  printf '%s\n' 'OpenAPI validator must reject cyclic aliases before generator execution.' >&2
+  exit 1
+fi
+
+cycle_assertion=$(sed -n '/^assert_cycle_rejected() {/,/^}/p' "$ROOT_DIR/scripts/test-validator.sh")
+for executable_assertion in \
+  '  if output=$(GENERATOR_CALL_LOG="$call_log" ruby -rtimeout -e \' \
+  "    'Timeout.timeout(5) { load ARGV.fetch(0) }' \\" \
+  '  if [ "$output" != "spec.yaml contains cyclic YAML aliases" ]; then' \
+  '  if [ -e "$call_log" ]; then'; do
+  if ! printf '%s\n' "$cycle_assertion" | grep -Fqx "$executable_assertion"; then
+    printf '%s\n' "Cycle assertion must preserve executable line: $executable_assertion" >&2
+    exit 1
+  fi
+done
+if printf '%s\n' "$cycle_assertion" | grep -Eq '^[[:space:]]*return([[:space:]]|$)'; then
+  printf '%s\n' 'Cycle assertion must not bypass its executable checks.' >&2
+  exit 1
+fi
+
+for cycle_scenario in \
+  'cyclic YAML alias' \
+  'cyclic YAML mapping key' \
+  'cyclic YAML array alias' \
+  'deep cyclic YAML alias chain'; do
+  if [ "$(grep -Ec "^[[:space:]]*assert_cycle_rejected \"$cycle_scenario\"[[:space:]]*$" "$ROOT_DIR/scripts/test-validator.sh")" -ne 1 ]; then
+    printf '%s\n' "Validator mutation tests must execute exactly one scenario: $cycle_scenario" >&2
+    exit 1
+  fi
+done
+
+for mutation_contract in \
+  'spec.yaml contains cyclic YAML aliases' \
+  'The generator must not run for cyclic aliases' \
+  'Validator rejected an acyclic shared YAML alias'; do
+  if ! grep -Fq "$mutation_contract" "$ROOT_DIR/scripts/test-validator.sh"; then
+    printf '%s\n' "Validator mutation tests must preserve cyclic-alias coverage: $mutation_contract" >&2
+    exit 1
+  fi
+done
+
+for plan_contract in \
+  '## Status' \
+  'Completed' \
+  '## Verification Completed' \
+  'Ruby 2.7.0' \
+  'Ruby 3.3.11' \
+  'absolute-Makefile `make check`' \
+  'Fifteen isolated hostile mutations were rejected' \
+  'git diff --check' \
+  'credential-pattern' \
+  'spec.yaml` and `spec.md` remained byte-identical'; do
+  if ! grep -Fq "$plan_contract" "$CYCLIC_ALIAS_PLAN"; then
+    printf '%s\n' "Cyclic-alias plan must preserve completed evidence: $plan_contract" >&2
+    exit 1
+  fi
+done
+if grep -Eiq 'pending|in[[:space:]]+progress|remain(s|ed)?[[:space:]]+(unfinished|to[[:space:]]+be)' "$CYCLIC_ALIAS_PLAN"; then
+  printf '%s\n' 'Cyclic-alias plan must not retain provisional verification language.' >&2
+  exit 1
+fi
 
 for document in "$README" "$ROOT_DIR/SECURITY.md" "$ROOT_DIR/VISION.md" "$ROOT_DIR/CHANGES.md"; do
   if ! grep -Fq "Path Item metadata" "$document"; then

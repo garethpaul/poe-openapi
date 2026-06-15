@@ -1,6 +1,8 @@
 # Cyclic YAML Alias Validation
 
-Status: In Progress
+## Status
+
+Completed
 
 ## Problem
 
@@ -27,11 +29,27 @@ actionable OpenAPI validation error.
 - Do not redesign the existing schema and reference validators.
 - Do not merge or close stacked pull requests without explicit authorization.
 
-## Verification: Pending
+## Verification Completed
 
-- Run focused validator fixtures, Ruby syntax, and full Make gates from the
-  repository and an external directory on the available supported runtime.
-- Reject focused hostile mutations across identity tracking, recursion-stack
-  cleanup, preflight ordering, fixtures, and completed plan evidence.
-- Audit the exact diff, generated artifacts, credentials, specification bytes,
-  dependency drift, conflict markers, and whitespace before commit.
+- Ruby 2.7.0 passed syntax checks, focused validator and generator fixtures,
+  the repository `make check`, and the absolute-Makefile `make check` from an
+  external directory.
+- Ruby 3.3.11 passed the full `make check` in the official Ruby container with
+  networking disabled and the repository mounted read-only.
+- Focused fixtures rejected cyclic mapping values, cyclic arrays, cyclic
+  mapping keys, and a 12,000-node alias chain with exactly
+  `spec.yaml contains cyclic YAML aliases` before generator execution; an
+  acyclic shared alias remained accepted.
+- Fifteen isolated hostile mutations were rejected across back-edge detection,
+  visited-node handling, array and mapping-key traversal, stack cleanup,
+  preflight bypass, assertion bypass, timeout removal, diagnostic drift,
+  executable fixture wiring, and plan status.
+- Plan-aware correctness, testing, maintainability, project-standards,
+  reliability, security, adversarial, agent-native, and repository-learning
+  review findings were applied: traversal is iterative, fixtures are bounded,
+  and executable assertion lines plus completed evidence are enforced.
+- Final `git diff --check`, generated-artifact, credential-pattern,
+  conflict-marker, dependency-drift, workflow, and specification audits passed.
+  `spec.yaml` and `spec.md` remained byte-identical at SHA-256
+  `5b84534b62a346a35b99a3c2253931cef63ab2bcd6ab602b5d4f2d7d6a967f0a`
+  and `6371186f648a79f0fa870709fc0f987b7877719672b0e048f0ef1be0f76edc7e`.
