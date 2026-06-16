@@ -1,6 +1,6 @@
 # YAML Graph Walker Depth Guard
 
-## Status Planned
+## Status Completed
 
 ## Problem
 
@@ -66,16 +66,33 @@ fixture reproduces the failure in `validate_property_descriptions`.
 - Register the plan and require iterative/visited traversal, fixture wiring,
   bounded execution, user guidance, and truthful completed verification.
 
-## Verification Planned
+## Work Completed
 
-- Ruby and POSIX-shell syntax checks.
-- Focused validator and baseline suites.
-- Repository-root and external-directory `make check`.
-- Isolated hostile mutations for recursion restoration, removed visited-state,
-  removed fixture execution, weakened timeout/output assertions, and reopened
-  plan status.
-- Exact diff, generated output, artifact, credential-pattern, conflict-marker,
-  binary, large-file, mode, and whitespace audits.
+- Added one iterative, alias-aware graph enumerator and routed all three
+  whole-document semantic validators through it.
+- Added a 5,000-node shallow-YAML/deep-alias fixture with a ten-second timeout
+  and explicit `SystemStackError` rejection.
+- Registered static contracts for traversal order, visited-object state, all
+  three walker call sites, fixture execution, timeout behavior, and this plan.
+- Documented the bounded validation behavior without changing generated API
+  content, dependencies, or hosted workflow configuration.
+
+## Verification Completed
+
+- Ruby 2.7.0 passed syntax checks, the focused validator and generator suites,
+  repository-root `make check`, and external-directory `make check` through the
+  absolute Makefile path.
+- Ruby 3.3 remains hosted-only in this environment; exact-head pull-request
+  evidence is recorded separately in the repository tracker.
+- The 5,000-node alias regression completed normally within ten seconds and
+  did not emit `SystemStackError`; the former recursive implementation failed
+  on the same graph.
+- Eight isolated hostile mutations were rejected across recursive traversal,
+  removed visited-state, incomplete walker adoption, fixture depth and
+  execution, timeout removal, output assertion removal, and reopened status.
+- Final `git diff --check`, generated-output, artifact, credential-pattern,
+  conflict-marker, binary, large-file, mode, and whitespace audits passed.
+  `spec.yaml` and `spec.md` remained byte-identical.
 
 ## Risks
 

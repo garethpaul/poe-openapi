@@ -107,6 +107,26 @@ if ! "$TMP_DIR/scripts/validate-openapi.rb" >/dev/null; then
 fi
 
 cp "$ROOT_DIR/spec.yaml" "$TMP_DIR/spec.yaml"
+ruby - "$TMP_DIR/spec.yaml" <<'RUBY'
+path = ARGV.fetch(0)
+File.open(path, 'a') do |file|
+  file.puts 'x-alias-node-0: &alias-node-0 {value: leaf}'
+  1.upto(5_000) do |index|
+    file.puts "x-alias-node-#{index}: &alias-node-#{index} {next: *alias-node-#{index - 1}}"
+  end
+end
+RUBY
+if ! output=$(ruby -rtimeout -e 'Timeout.timeout(10) { load ARGV.fetch(0) }' \
+  "$TMP_DIR/scripts/validate-openapi.rb" 2>&1); then
+  printf '%s\n%s\n' 'Validator rejected a deep acyclic YAML alias graph:' "$output" >&2
+  exit 1
+fi
+if printf '%s\n' "$output" | grep -Fq 'SystemStackError'; then
+  printf '%s\n%s\n' 'Deep acyclic YAML alias graph exhausted the validator stack:' "$output" >&2
+  exit 1
+fi
+
+cp "$ROOT_DIR/spec.yaml" "$TMP_DIR/spec.yaml"
 printf '\nx-invalid: [\n' >> "$TMP_DIR/spec.yaml"
 if output=$("$TMP_DIR/scripts/validate-openapi.rb" 2>&1); then
   printf '%s\n' 'Validator accepted malformed YAML.' >&2
