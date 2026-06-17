@@ -1,8 +1,6 @@
 # YAML Document Root Validation
 
-## Status
-
-Planned
+## Status Completed
 
 ## Problem
 
@@ -74,3 +72,31 @@ invoke the generator before rejecting the invalid root.
   ordering, changed diagnostics, missing fixtures, and reopened plan status.
 - Final generated-output, specification, artifact, secret-pattern,
   conflict-marker, binary, mode, dependency, and whitespace audits.
+
+## Work Completed
+
+- Added entry-point-specific Hash root guards immediately after successful YAML
+  parsing in both validation and generation.
+- Added empty, scalar, and sequence root fixtures to both executable suites,
+  including proof that validation rejects before generator dispatch and that
+  generation never replaces `spec.md`.
+- Registered mutation-sensitive baseline contracts for guards, diagnostics,
+  ordering, fixtures, side effects, plan registration, and completed evidence.
+- Documented the deterministic failure boundary without changing the checked-in
+  OpenAPI specification, generated reference, dependencies, or workflows.
+
+## Verification Completed
+
+- Ruby 2.7.0 passed syntax checks and the focused validator and generator
+  suites; POSIX `sh -n` and `dash -n` passed for all changed shell scripts.
+- Full `make check` passed from the repository root and through the absolute
+  Makefile path from an external directory in an isolated Git-aware final-state
+  projection.
+- Empty, scalar, and sequence documents produced exact scoped diagnostics,
+  never exposed `NoMethodError`, and preserved generator ordering and output.
+- Ten isolated hostile mutations were rejected across both guards, weakened
+  type checks, changed diagnostics, validator ordering, fixture execution,
+  output preservation, plan registration, and reopened status.
+- `spec.yaml` and `spec.md` remained byte-identical; final generated-output,
+  artifact, credential-pattern, conflict-marker, binary, mode, dependency, and
+  whitespace audits passed for the exact eight-file change.

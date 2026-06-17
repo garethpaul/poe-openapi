@@ -100,6 +100,9 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 - Validator mutations reject external URLs, relative files, non-string values,
   and dangling references while accepting correctly escaped JSON Pointer `/`
   and `~` tokens.
+- Syntactically valid YAML with an empty, scalar, or sequence document root is
+  rejected with stable validator and generator diagnostics before graph
+  traversal, generator dispatch, rendering, or `spec.md` replacement.
 - Every OpenAPI response must include a non-empty `description` so generated
   documentation retains the meaning of each status code.
 - The baseline script checks required files, validator wiring, completed
