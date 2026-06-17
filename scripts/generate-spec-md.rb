@@ -40,6 +40,29 @@ def error_example(schema)
   end
 end
 
+def openapi_container_shape_error(spec)
+  return 'spec.yaml info must be a mapping' unless spec['info'].is_a?(Hash)
+  return 'spec.yaml paths must be a mapping' unless spec['paths'].is_a?(Hash)
+
+  components = spec['components']
+  return 'spec.yaml components must be a mapping' if !components.nil? && !components.is_a?(Hash)
+
+  if components.is_a?(Hash)
+    schemas = components['schemas']
+    return 'spec.yaml components.schemas must be a mapping' if !schemas.nil? && !schemas.is_a?(Hash)
+
+    security_schemes = components['securitySchemes']
+    if !security_schemes.nil? && !security_schemes.is_a?(Hash)
+      return 'spec.yaml components.securitySchemes must be a mapping'
+    end
+  end
+
+  servers = spec['servers']
+  return 'spec.yaml servers must be an array' if !servers.nil? && !servers.is_a?(Array)
+
+  nil
+end
+
 def generate_reference(spec)
   info = spec.fetch('info')
   lines = []
@@ -149,6 +172,10 @@ rescue SystemStackError
 end
 unless spec.is_a?(Hash)
   warn 'spec.yaml root must be a mapping for Markdown generation'
+  exit 1
+end
+if (shape_error = openapi_container_shape_error(spec))
+  warn shape_error
   exit 1
 end
 

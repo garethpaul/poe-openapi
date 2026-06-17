@@ -26,12 +26,45 @@ assert_document_root_rejected() {
   cmp "$ROOT_DIR/spec.md" "$WORK_DIR/spec.md"
 }
 
+assert_container_shape_rejected() {
+  label=$1
+  field_path=$2
+  invalid_yaml=$3
+  expected=$4
+  cp "$ROOT_DIR/spec.yaml" "$WORK_DIR/spec.yaml"
+  cp "$ROOT_DIR/spec.md" "$WORK_DIR/spec.md"
+  ruby -ryaml - "$WORK_DIR/spec.yaml" "$field_path" "$invalid_yaml" <<'RUBY'
+path, field_path, invalid_yaml = ARGV
+spec = YAML.safe_load(File.read(path), aliases: true)
+keys = field_path.split('.')
+container = keys[0...-1].reduce(spec) { |node, key| node.fetch(key) }
+container[keys.last] = YAML.safe_load(invalid_yaml, aliases: true)
+File.write(path, YAML.dump(spec))
+RUBY
+  if output=$("$WORK_DIR/scripts/generate-spec-md.rb" 2>&1); then
+    printf '%s\n' "generator accepted malformed $label" >&2
+    exit 1
+  fi
+  if [ "$output" != "$expected" ]; then
+    printf '%s\n%s\n' "generator returned the wrong $label error:" "$output" >&2
+    exit 1
+  fi
+  cmp "$ROOT_DIR/spec.md" "$WORK_DIR/spec.md"
+}
+
 : > "$WORK_DIR/spec.yaml"
 assert_document_root_rejected "empty"
 printf '%s\n' 'scalar-root' > "$WORK_DIR/spec.yaml"
 assert_document_root_rejected "scalar"
 printf '%s\n' '- sequence-root' > "$WORK_DIR/spec.yaml"
 assert_document_root_rejected "sequence"
+
+assert_container_shape_rejected info info '[]' 'spec.yaml info must be a mapping'
+assert_container_shape_rejected paths paths '[]' 'spec.yaml paths must be a mapping'
+assert_container_shape_rejected components components '[]' 'spec.yaml components must be a mapping'
+assert_container_shape_rejected components.schemas components.schemas '[]' 'spec.yaml components.schemas must be a mapping'
+assert_container_shape_rejected components.securitySchemes components.securitySchemes '[]' 'spec.yaml components.securitySchemes must be a mapping'
+assert_container_shape_rejected servers servers 'invalid' 'spec.yaml servers must be an array'
 
 cp "$ROOT_DIR/spec.yaml" "$WORK_DIR/spec.yaml"
 cp "$WORK_DIR/spec.md" "$WORK_DIR/spec.md.before-recursion"

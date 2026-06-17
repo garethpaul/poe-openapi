@@ -1,8 +1,6 @@
 # OpenAPI Container Shape Validation
 
-## Status
-
-In Progress
+## Status Completed
 
 ## Problem
 
@@ -61,3 +59,29 @@ then update maintainer guidance and the changelog.
 - Do not add a schema-validation dependency or attempt full OpenAPI validation.
 - Do not change nested operation, response, schema, or security semantics.
 - Do not merge or close stacked pull requests without explicit authorization.
+
+## Work Completed
+
+- Added field-specific container-shape preflight checks to both validator and
+  generator entry points before generator dispatch, traversal, rendering, or
+  output replacement.
+- Added isolated fixtures for malformed `info`, `paths`, `components`,
+  `components.schemas`, `components.securitySchemes`, and `servers` values.
+- Proved invalid validator input does not invoke the generator and invalid
+  generator input leaves `spec.md` unchanged.
+- Registered durable ordering, diagnostic, fixture, guidance, and plan
+  contracts in the scripted baseline.
+
+## Verification Completed
+
+- Ruby syntax checks and both POSIX shell parsers passed for every changed
+  executable script.
+- Focused validator and generator suites passed on the available Ruby runtime.
+- Full `make check` passed from the repository root and through the absolute
+  Makefile path from `/tmp` in a Git-backed isolated final-state projection.
+- Full `make check` then passed from both caller locations against the exact
+  worktree after the completed-plan contract was active.
+- Eight hostile mutations were rejected across both entry-point guards, exact
+  diagnostics, both fixture contracts, plan registration, completed status,
+  and maintainer guidance.
+- `spec.yaml` and generated `spec.md` remained byte-identical.
