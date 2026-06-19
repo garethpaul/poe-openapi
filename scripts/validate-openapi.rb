@@ -25,13 +25,53 @@ PLANS = [
   'docs/plans/2026-06-12-supported-ruby-matrix.md',
   'docs/plans/2026-06-13-operation-id-validation.md',
   'docs/plans/2026-06-13-path-item-metadata-validation.md',
-  'docs/plans/2026-06-13-generated-markdown-spec.md'
+  'docs/plans/2026-06-13-generated-markdown-spec.md',
+  'docs/plans/2026-06-15-cyclic-yaml-alias-validation.md'
 ].freeze
 
 HTTP_METHODS = %w[get put post delete options head patch trace].freeze
 PATH_ITEM_FIELDS = (HTTP_METHODS + %w[$ref summary description servers parameters]).freeze
 
+def cyclic_object_graph?(root)
+  visiting = {}
+  visited = {}
+  stack = [[:enter, root]]
+
+  until stack.empty?
+    action, node = stack.pop
+    next unless node.is_a?(Hash) || node.is_a?(Array)
+
+    object_id = node.object_id
+    if action == :exit
+      visiting.delete(object_id)
+      visited[object_id] = true
+      next
+    end
+
+    return true if visiting[object_id]
+    next if visited[object_id]
+
+    visiting[object_id] = true
+    stack << [:exit, node]
+    if node.is_a?(Hash)
+      node.each_pair do |key, value|
+        stack << [:enter, value]
+        stack << [:enter, key]
+      end
+    else
+      node.each { |value| stack << [:enter, value] }
+    end
+  end
+
+  false
+end
+
 spec = YAML.safe_load(File.read('spec.yaml'), aliases: true)
+if cyclic_object_graph?(spec)
+  warn 'spec.yaml contains cyclic YAML aliases'
+  exit 1
+end
+
 reference = File.read('spec.md')
 errors = []
 

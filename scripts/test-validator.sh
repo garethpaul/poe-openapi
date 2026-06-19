@@ -13,7 +13,17 @@ cp "$VALIDATOR" "$TMP_DIR/scripts/validate-openapi.rb"
 cp "$ROOT_DIR/scripts/generate-spec-md.rb" "$TMP_DIR/scripts/generate-spec-md.rb"
 cp "$ROOT_DIR/spec.md" "$TMP_DIR/spec.md"
 cp -R "$ROOT_DIR/docs/plans" "$TMP_DIR/docs/plans"
-chmod +x "$TMP_DIR/scripts/generate-spec-md.rb"
+mv "$TMP_DIR/scripts/generate-spec-md.rb" "$TMP_DIR/scripts/generate-spec-md.real.rb"
+cat > "$TMP_DIR/scripts/generate-spec-md.rb" <<'SH'
+#!/usr/bin/env sh
+set -eu
+
+if [ -n "${GENERATOR_CALL_LOG:-}" ]; then
+  : > "$GENERATOR_CALL_LOG"
+fi
+exec "$(dirname "$0")/generate-spec-md.real.rb" "$@"
+SH
+chmod +x "$TMP_DIR/scripts/generate-spec-md.rb" "$TMP_DIR/scripts/generate-spec-md.real.rb"
 
 assert_rejected() {
   label=$1
@@ -31,6 +41,74 @@ assert_rejected() {
       ;;
   esac
 }
+
+assert_cycle_rejected() {
+  label=$1
+  call_log="$TMP_DIR/generator-call"
+  rm -f "$call_log"
+  if output=$(GENERATOR_CALL_LOG="$call_log" ruby -rtimeout -e \
+    'Timeout.timeout(5) { load ARGV.fetch(0) }' \
+    "$TMP_DIR/scripts/validate-openapi.rb" 2>&1); then
+    printf '%s\n' "Validator accepted a $label." >&2
+    exit 1
+  fi
+  if [ "$output" != "spec.yaml contains cyclic YAML aliases" ]; then
+    printf '%s\n%s\n' "Validator returned the wrong $label error:" "$output" >&2
+    exit 1
+  fi
+  if [ -e "$call_log" ]; then
+    printf '%s\n' "The generator must not run for cyclic aliases." >&2
+    exit 1
+  fi
+}
+
+cp "$ROOT_DIR/spec.yaml" "$TMP_DIR/spec.yaml"
+cat >> "$TMP_DIR/spec.yaml" <<'YAML'
+x-cyclic-alias: &cyclic-alias
+  self: *cyclic-alias
+YAML
+assert_cycle_rejected "cyclic YAML alias"
+
+cp "$ROOT_DIR/spec.yaml" "$TMP_DIR/spec.yaml"
+cat >> "$TMP_DIR/spec.yaml" <<'YAML'
+x-cyclic-array: &cyclic-array
+  - *cyclic-array
+YAML
+assert_cycle_rejected "cyclic YAML array alias"
+
+cp "$ROOT_DIR/spec.yaml" "$TMP_DIR/spec.yaml"
+cat >> "$TMP_DIR/spec.yaml" <<'YAML'
+x-cyclic-key: &cyclic-key
+  ? *cyclic-key
+  : recursive-key
+YAML
+assert_cycle_rejected "cyclic YAML mapping key"
+
+cp "$ROOT_DIR/spec.yaml" "$TMP_DIR/spec.yaml"
+ruby - "$TMP_DIR/spec.yaml" <<'RUBY'
+path = ARGV.fetch(0)
+File.open(path, 'a') do |file|
+  file.puts 'x-deep-cycle: &deep-cycle-0'
+  file.puts '  - *deep-cycle-0'
+  1.upto(12_000) do |index|
+    file.puts "x-deep-cycle: &deep-cycle-#{index}"
+    file.puts "  - *deep-cycle-#{index - 1}"
+  end
+end
+RUBY
+assert_cycle_rejected "deep cyclic YAML alias chain"
+
+cp "$ROOT_DIR/spec.yaml" "$TMP_DIR/spec.yaml"
+cat >> "$TMP_DIR/spec.yaml" <<'YAML'
+x-shared-alias: &shared-alias
+  nested:
+    value: reusable
+x-shared-alias-copy: *shared-alias
+YAML
+if ! "$TMP_DIR/scripts/validate-openapi.rb" >/dev/null; then
+  printf '%s\n' "Validator rejected an acyclic shared YAML alias." >&2
+  exit 1
+fi
 
 mutate_description() {
   mode=$1
