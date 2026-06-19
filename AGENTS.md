@@ -15,6 +15,7 @@
 
 - Install dependencies: no repository-specific install command is documented.
 - Full baseline: `make check`
+- Supported verification runtimes: Ruby 3.4 and Ruby 4.0
 - Combined verification: `make verify`
 - Lint/static checks: `make lint`
 - Tests: `make test`
@@ -47,6 +48,7 @@
 - See `CHANGES.md` for maintenance history.
 - See `docs/plans/2026-06-08-placeholder-server-validation.md` for the current canonical completed engineering plan.
 - See `docs/plans/2026-06-08-response-status-reference-validation.md` for the response-status reference guard.
+- See `docs/plans/2026-06-12-supported-ruby-matrix.md` for the maintained hosted runtime policy.
 
 ## Agent workflow
 

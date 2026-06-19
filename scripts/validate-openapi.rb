@@ -22,6 +22,7 @@ PLANS = [
   'docs/plans/2026-06-10-local-reference-validation.md',
   'docs/plans/2026-06-12-response-description-validation.md',
   'docs/plans/2026-06-12-self-contained-reference-validation.md',
+  'docs/plans/2026-06-12-supported-ruby-matrix.md',
   'docs/plans/2026-06-13-operation-id-validation.md',
   'docs/plans/2026-06-13-path-item-metadata-validation.md',
   'docs/plans/2026-06-13-generated-markdown-spec.md'
