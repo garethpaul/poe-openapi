@@ -33,7 +33,7 @@ Additional scan context:
 ### Prerequisites
 
 - Git
-- Ruby and `make`
+- Ruby 3.4 or Ruby 4.0 and `make`
 
 ### Setup
 
@@ -54,7 +54,7 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 - Run `make check` or `make verify` before committing OpenAPI or reference documentation changes.
 - GitHub Actions runs the same dependency-free `make check` gate for pushes to
   `main`, pull requests, and manual dispatches. Checkout credentials are not
-  persisted, Ruby setup is pinned, and the baseline runs on Ruby 2.7 and 3.3
+  persisted, Ruby setup is pinned, and the baseline runs on Ruby 3.4 and Ruby 4.0
   while enforcing the complete workflow contract.
 - Run `make build` for the static OpenAPI contract build gate; it uses the same
   dependency-free validator as `make lint`.
@@ -149,6 +149,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   exact credential-free hosted workflow and reference mutation coverage.
 - See `docs/plans/2026-06-12-self-contained-reference-validation.md` for the
   local-only OpenAPI reference contract and its mutation coverage.
+- See `docs/plans/2026-06-12-supported-ruby-matrix.md` for the maintained Ruby
+  runtime policy and exact hosted matrix contract.
 - See `plans/2026-06-08-request-field-reference-validation.md` for the current
   request-field documentation guard.
 

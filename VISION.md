@@ -22,7 +22,7 @@ Priority:
 - Run the canonical dependency-free OpenAPI gate in hosted CI with read-only
   permissions and pinned third-party actions
 - Keep hosted checkout credential-free and reject workflow drift structurally
-- Preserve Ruby 2.7 compatibility while validating on modern Ruby 3.3
+- Validate the dependency-free contract on maintained Ruby 3.4 and Ruby 4.0
 - Keep the validator independent of the caller's working directory
 - Keep a scriptable baseline guard for required files and local metadata
 - Preserve required request-field documentation in the Markdown reference
