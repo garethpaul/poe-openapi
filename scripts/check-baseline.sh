@@ -15,6 +15,7 @@ PARSER_RECURSION_PLAN="$DOCS_PLANS/2026-06-15-yaml-parser-recursion-guard.md"
 GENERATOR_RECURSION_PLAN="$DOCS_PLANS/2026-06-15-yaml-generator-recursion-guard.md"
 GRAPH_WALKER_PLAN="$DOCS_PLANS/2026-06-16-yaml-graph-walker-depth.md"
 DOCUMENT_ROOT_PLAN="$DOCS_PLANS/2026-06-17-yaml-document-root-validation.md"
+CONTAINER_SHAPE_PLAN="$DOCS_PLANS/2026-06-17-openapi-container-shape-validation.md"
 LOCATION_INDEPENDENT_MAKE_PLAN="$DOCS_PLANS/2026-06-14-location-independent-make.md"
 WORKFLOW="$ROOT_DIR/.github/workflows/check.yml"
 
@@ -56,6 +57,7 @@ for path in \
   "docs/plans/2026-06-15-yaml-generator-recursion-guard.md" \
   "docs/plans/2026-06-16-yaml-graph-walker-depth.md" \
   "docs/plans/2026-06-17-yaml-document-root-validation.md" \
+  "docs/plans/2026-06-17-openapi-container-shape-validation.md" \
   "docs/plans/2026-06-14-location-independent-make.md" \
   ".github/workflows/check.yml" \
   "scripts/check-baseline.sh"; do
@@ -538,6 +540,79 @@ if grep -Eiq 'pending|in[[:space:]]+progress|remain(s|ed)?[[:space:]]+(unfinishe
   printf '%s\n' 'YAML document-root plan must not retain provisional verification language.' >&2
   exit 1
 fi
+
+validator_shape_line=$(grep -nF 'if (shape_error = openapi_container_shape_error(spec))' "$VALIDATOR" | cut -d: -f1)
+if [ -z "$validator_shape_line" ] || [ "$validator_cycle_line" -ge "$validator_shape_line" ] ||
+   [ "$validator_shape_line" -ge "$validator_generator_line" ]; then
+  printf '%s\n' 'OpenAPI validator must reject malformed container shapes after cycle validation and before generator invocation.' >&2
+  exit 1
+fi
+generator_shape_line=$(grep -nF 'if (shape_error = openapi_container_shape_error(spec))' "$GENERATOR" | cut -d: -f1)
+if [ -z "$generator_shape_line" ] || [ "$generator_root_line" -ge "$generator_shape_line" ] ||
+   [ "$generator_shape_line" -ge "$generator_render_line" ]; then
+  printf '%s\n' 'OpenAPI generator must reject malformed container shapes before rendering.' >&2
+  exit 1
+fi
+for shape_contract in \
+  'spec.yaml info must be a mapping' \
+  'spec.yaml paths must be a mapping' \
+  'spec.yaml components must be a mapping' \
+  'spec.yaml components.schemas must be a mapping' \
+  'spec.yaml components.securitySchemes must be a mapping' \
+  'spec.yaml servers must be an array'; do
+  if ! grep -Fq "$shape_contract" "$VALIDATOR" || ! grep -Fq "$shape_contract" "$GENERATOR"; then
+    printf '%s\n' "Both OpenAPI entry points must preserve container-shape diagnostics: $shape_contract" >&2
+    exit 1
+  fi
+done
+for fixture_contract in \
+  'assert_container_shape_rejected info' \
+  'assert_container_shape_rejected paths' \
+  'assert_container_shape_rejected components.schemas' \
+  'assert_container_shape_rejected components.securitySchemes' \
+  'assert_container_shape_rejected servers'; do
+  if ! grep -Fq "$fixture_contract" "$ROOT_DIR/scripts/test-validator.sh" ||
+     ! grep -Fq "$fixture_contract" "$ROOT_DIR/scripts/test-generator.sh"; then
+    printf '%s\n' "Container-shape tests must preserve both entry-point fixtures: $fixture_contract" >&2
+    exit 1
+  fi
+done
+for side_effect_contract in \
+  'The generator must not run for malformed $label.' \
+  'cmp "$ROOT_DIR/spec.md" "$WORK_DIR/spec.md"'; do
+  if ! grep -Fq "$side_effect_contract" "$ROOT_DIR/scripts/test-validator.sh" &&
+     ! grep -Fq "$side_effect_contract" "$ROOT_DIR/scripts/test-generator.sh"; then
+    printf '%s\n' "Container-shape tests must preserve rejection side effects: $side_effect_contract" >&2
+    exit 1
+  fi
+done
+if ! grep -Fq "'docs/plans/2026-06-17-openapi-container-shape-validation.md'" "$VALIDATOR"; then
+  printf '%s\n' 'OpenAPI validator must register the container-shape plan.' >&2
+  exit 1
+fi
+for plan_contract in \
+  '## Status Completed' \
+  '## Work Completed' \
+  '## Verification Completed' \
+  'make check' \
+  'hostile mutations' \
+  'spec.yaml` and generated `spec.md` remained byte-identical'; do
+  if ! grep -Fq "$plan_contract" "$CONTAINER_SHAPE_PLAN"; then
+    printf '%s\n' "Container-shape plan must preserve completed evidence: $plan_contract" >&2
+    exit 1
+  fi
+done
+if grep -Eiq 'pending|in[[:space:]]+progress|remain(s|ed)?[[:space:]]+(unfinished|to[[:space:]]+be)' "$CONTAINER_SHAPE_PLAN"; then
+  printf '%s\n' 'Container-shape plan must not retain provisional verification language.' >&2
+  exit 1
+fi
+
+for document in "$README" "$ROOT_DIR/SECURITY.md" "$ROOT_DIR/VISION.md" "$ROOT_DIR/CHANGES.md"; do
+  if ! grep -Fqi 'top-level container shapes' "$document"; then
+    printf '%s\n' "$document must document top-level container shapes." >&2
+    exit 1
+  fi
+done
 
 for document in "$README" "$ROOT_DIR/SECURITY.md" "$ROOT_DIR/VISION.md" "$ROOT_DIR/CHANGES.md"; do
   if ! grep -Fqi 'generator parser recursion failures' "$document"; then

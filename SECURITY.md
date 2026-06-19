@@ -69,6 +69,8 @@ files outside the reviewed contract.
 The Markdown reference is generated deterministically from `spec.yaml`; review
 security-sensitive contract changes in the YAML source and let `make check`
 reject stale or hand-edited output.
+Validator and generator preflight checks reject malformed top-level container shapes
+before they can expose runtime traces or replace reviewed output.
 
 ## Dependency and Supply Chain Security
 

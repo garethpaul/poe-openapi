@@ -2,6 +2,8 @@
 
 ## 2026-06-17
 
+- Added stable validator and generator diagnostics for malformed top-level container shapes
+  before generator dispatch, traversal, or output replacement.
 - Added deterministic validator and generator rejection for empty, scalar, and
   sequence YAML document roots before downstream OpenAPI processing.
 

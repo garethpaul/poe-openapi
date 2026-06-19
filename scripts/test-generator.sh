@@ -26,12 +26,60 @@ assert_document_root_rejected() {
   cmp "$ROOT_DIR/spec.md" "$WORK_DIR/spec.md"
 }
 
+assert_container_shape_rejected() {
+  label=$1
+  field_path=$2
+  invalid_yaml=$3
+  expected=$4
+  cp "$ROOT_DIR/spec.yaml" "$WORK_DIR/spec.yaml"
+  cp "$ROOT_DIR/spec.md" "$WORK_DIR/spec.md"
+  ruby -ryaml - "$WORK_DIR/spec.yaml" "$field_path" "$invalid_yaml" <<'RUBY'
+path, field_path, invalid_yaml = ARGV
+spec = YAML.safe_load(File.read(path), aliases: true)
+keys = field_path.split('.')
+container = keys[0...-1].reduce(spec) do |node, key|
+  node.is_a?(Array) ? node.fetch(Integer(key)) : node.fetch(key)
+end
+replacement = YAML.safe_load(invalid_yaml, aliases: true)
+container.is_a?(Array) ? container[Integer(keys.last)] = replacement : container[keys.last] = replacement
+File.write(path, YAML.dump(spec))
+RUBY
+  if output=$("$WORK_DIR/scripts/generate-spec-md.rb" 2>&1); then
+    printf '%s\n' "generator accepted malformed $label" >&2
+    exit 1
+  fi
+  if [ "$output" != "$expected" ]; then
+    printf '%s\n%s\n' "generator returned the wrong $label error:" "$output" >&2
+    exit 1
+  fi
+  cmp "$ROOT_DIR/spec.md" "$WORK_DIR/spec.md"
+}
+
 : > "$WORK_DIR/spec.yaml"
 assert_document_root_rejected "empty"
 printf '%s\n' 'scalar-root' > "$WORK_DIR/spec.yaml"
 assert_document_root_rejected "scalar"
 printf '%s\n' '- sequence-root' > "$WORK_DIR/spec.yaml"
 assert_document_root_rejected "sequence"
+
+assert_container_shape_rejected info info '[]' 'spec.yaml info must be a mapping'
+assert_container_shape_rejected paths paths '[]' 'spec.yaml paths must be a mapping'
+assert_container_shape_rejected components components '[]' 'spec.yaml components must be a mapping'
+assert_container_shape_rejected components.schemas components.schemas '[]' 'spec.yaml components.schemas must be a mapping'
+assert_container_shape_rejected components.securitySchemes components.securitySchemes '[]' 'spec.yaml components.securitySchemes must be a mapping'
+assert_container_shape_rejected servers servers 'invalid' 'spec.yaml servers must be an array'
+assert_container_shape_rejected info.contact info.contact '[]' 'spec.yaml info.contact must be a mapping'
+assert_container_shape_rejected info.license info.license '[]' 'spec.yaml info.license must be a mapping'
+assert_container_shape_rejected servers.0 servers.0 'invalid' 'spec.yaml servers[0] must be a mapping'
+assert_container_shape_rejected component.schema components.schemas.Error 'invalid' 'spec.yaml components.schemas.Error must be a mapping'
+assert_container_shape_rejected schema.properties components.schemas.SseConversionRequest.properties '[]' 'spec.yaml components.schemas.SseConversionRequest.properties must be a mapping'
+assert_container_shape_rejected schema.property components.schemas.SseConversionRequest.properties.contentType 'invalid' 'spec.yaml components.schemas.SseConversionRequest.properties.contentType must be a mapping'
+assert_container_shape_rejected security.scheme components.securitySchemes.ApiKeyAuth 'invalid' 'spec.yaml components.securitySchemes.ApiKeyAuth must be a mapping'
+assert_container_shape_rejected path.item paths./stream-to-poe '[]' 'spec.yaml path item /stream-to-poe must be an object'
+assert_container_shape_rejected operation paths./stream-to-poe.post 'invalid' 'POST /stream-to-poe operation must be an object'
+assert_container_shape_rejected requestBody paths./stream-to-poe.post.requestBody 'invalid' 'POST /stream-to-poe requestBody must be an object'
+assert_container_shape_rejected responses paths./stream-to-poe.post.responses '[]' 'POST /stream-to-poe responses must be an object'
+assert_container_shape_rejected response paths./stream-to-poe.post.responses.200 'invalid' 'POST /stream-to-poe 200 response must be an object'
 
 cp "$ROOT_DIR/spec.yaml" "$WORK_DIR/spec.yaml"
 cp "$WORK_DIR/spec.md" "$WORK_DIR/spec.md.before-recursion"
@@ -112,6 +160,50 @@ for mutation in \
   'Mutation error example'; do
   grep -Fq -- "$mutation" "$WORK_DIR/spec.md"
 done
+"$WORK_DIR/scripts/generate-spec-md.rb" --check
+
+cp "$ROOT_DIR/spec.yaml" "$WORK_DIR/spec.yaml"
+ruby - "$WORK_DIR/spec.yaml" <<'RUBY'
+require 'yaml'
+
+path = ARGV.fetch(0)
+spec = YAML.safe_load(File.read(path), aliases: true)
+spec.fetch('info')['title'] = 'Unsafe [Title](javascript:alert(1)) <script>'
+spec.fetch('info')['description'] = 'Overview [link](javascript:alert(1)) with <b>HTML</b>.'
+spec.fetch('info').fetch('contact')['name'] = 'Support [Team]'
+spec.fetch('info').fetch('contact')['url'] = 'javascript:alert(1)'
+spec.fetch('info').fetch('license')['name'] = 'Apache <License>'
+spec.fetch('servers').first['description'] = 'Primary **server** <img src=x>'
+operation = spec.fetch('paths').fetch('/stream-to-poe').fetch('post')
+operation['summary'] = 'Summary [jump](javascript:alert(1)) <script>'
+operation['description'] = 'Description with [link](javascript:alert(1)) and <tag>.'
+property = spec.fetch('components').fetch('schemas').fetch('SseConversionRequest').fetch('properties').fetch('contentType')
+property['description'] = 'Field `code` and [link](javascript:alert(1)) <tag>'
+property['default'] = 'type`with`tick'
+security = spec.fetch('components').fetch('securitySchemes').fetch('ApiKeyAuth')
+security['description'] = 'Security [link](javascript:alert(1)) <tag>.'
+File.write(path, YAML.dump(spec))
+RUBY
+"$WORK_DIR/scripts/generate-spec-md.rb" >/dev/null
+for escaped in \
+  '# Unsafe \[Title\](javascript:alert(1)) &lt;script&gt; API' \
+  'Overview \[link\](javascript:alert(1)) with &lt;b&gt;HTML&lt;/b&gt;.' \
+  '- **Contact**: Support \[Team\] (`javascript:alert(1)`) (support@example.com)' \
+  '- **License**: [Apache &lt;License&gt;](https://www.apache.org/licenses/LICENSE-2.0.html)' \
+  '**Primary \*\*server\*\* &lt;img src=x&gt;**' \
+  '### 1. Summary \[jump\](javascript:alert(1)) &lt;script&gt;' \
+  'Description with \[link\](javascript:alert(1)) and &lt;tag&gt;.' \
+  'Field \`code\` and \[link\](javascript:alert(1)) &lt;tag&gt; (default: `` type`with`tick ``)' \
+  'Security \[link\](javascript:alert(1)) &lt;tag&gt;.'; do
+  grep -Fq -- "$escaped" "$WORK_DIR/spec.md"
+done
+if grep -Fq '<script' "$WORK_DIR/spec.md" ||
+   grep -Fq '<tag>' "$WORK_DIR/spec.md" ||
+   grep -Fq '<img' "$WORK_DIR/spec.md" ||
+   grep -Eq '(^|[^\\])\]\(javascript:' "$WORK_DIR/spec.md"; then
+  printf '%s\n' 'Generated Markdown retained unescaped HTML or a clickable javascript link.' >&2
+  exit 1
+fi
 "$WORK_DIR/scripts/generate-spec-md.rb" --check
 
 if output=$("$WORK_DIR/scripts/generate-spec-md.rb" unexpected 2>&1); then

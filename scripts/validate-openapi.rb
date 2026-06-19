@@ -29,7 +29,8 @@ PLANS = [
   'docs/plans/2026-06-15-cyclic-yaml-alias-validation.md',
   'docs/plans/2026-06-15-yaml-parser-recursion-guard.md',
   'docs/plans/2026-06-16-yaml-graph-walker-depth.md',
-  'docs/plans/2026-06-17-yaml-document-root-validation.md'
+  'docs/plans/2026-06-17-yaml-document-root-validation.md',
+  'docs/plans/2026-06-17-openapi-container-shape-validation.md'
 ].freeze
 
 HTTP_METHODS = %w[get put post delete options head patch trace].freeze
@@ -69,6 +70,110 @@ def cyclic_object_graph?(root)
   false
 end
 
+def openapi_container_shape_error(spec)
+  return 'spec.yaml info must be a mapping' unless spec['info'].is_a?(Hash)
+  return 'spec.yaml paths must be a mapping' unless spec['paths'].is_a?(Hash)
+
+  info = spec['info']
+  contact = info['contact']
+  return 'spec.yaml info.contact must be a mapping' if !contact.nil? && !contact.is_a?(Hash)
+
+  license = info['license']
+  return 'spec.yaml info.license must be a mapping' if !license.nil? && !license.is_a?(Hash)
+
+  components = spec['components']
+  return 'spec.yaml components must be a mapping' if !components.nil? && !components.is_a?(Hash)
+
+  if components.is_a?(Hash)
+    schemas = components['schemas']
+    return 'spec.yaml components.schemas must be a mapping' if !schemas.nil? && !schemas.is_a?(Hash)
+    if schemas.is_a?(Hash)
+      schemas.each do |schema_name, schema|
+        return "spec.yaml components.schemas.#{schema_name} must be a mapping" unless schema.is_a?(Hash)
+
+        properties = schema['properties']
+        unless properties.nil? || properties.is_a?(Hash)
+          return "spec.yaml components.schemas.#{schema_name}.properties must be a mapping"
+        end
+
+        next unless properties.is_a?(Hash)
+
+        properties.each do |property_name, property_schema|
+          next if property_schema.is_a?(Hash)
+
+          return "spec.yaml components.schemas.#{schema_name}.properties.#{property_name} must be a mapping"
+        end
+      end
+    end
+
+    security_schemes = components['securitySchemes']
+    if !security_schemes.nil? && !security_schemes.is_a?(Hash)
+      return 'spec.yaml components.securitySchemes must be a mapping'
+    end
+    if security_schemes.is_a?(Hash)
+      security_schemes.each do |scheme_name, scheme|
+        return "spec.yaml components.securitySchemes.#{scheme_name} must be a mapping" unless scheme.is_a?(Hash)
+      end
+    end
+  end
+
+  servers = spec['servers']
+  return 'spec.yaml servers must be an array' if !servers.nil? && !servers.is_a?(Array)
+  if servers.is_a?(Array)
+    servers.each_with_index do |server, index|
+      return "spec.yaml servers[#{index}] must be a mapping" unless server.is_a?(Hash)
+    end
+  end
+
+  spec['paths'].each do |path, path_item|
+    return "spec.yaml path item #{path} must be an object" unless path_item.is_a?(Hash)
+
+    path_item.each do |method, operation|
+      next unless HTTP_METHODS.include?(method.to_s)
+
+      method_name = method.to_s.upcase
+      return "#{method_name} #{path} operation must be an object" unless operation.is_a?(Hash)
+
+      request_body = operation['requestBody']
+      return "#{method_name} #{path} requestBody must be an object" if !request_body.nil? && !request_body.is_a?(Hash)
+
+      if request_body.is_a?(Hash)
+        content = request_body['content']
+        return "#{method_name} #{path} requestBody.content must be an object" if !content.nil? && !content.is_a?(Hash)
+
+        json_content = content['application/json'] if content.is_a?(Hash)
+        if !json_content.nil? && !json_content.is_a?(Hash)
+          return "#{method_name} #{path} requestBody application/json content must be an object"
+        end
+
+        schema = json_content['schema'] if json_content.is_a?(Hash)
+        return "#{method_name} #{path} requestBody schema must be an object" if !schema.nil? && !schema.is_a?(Hash)
+      end
+
+      responses = operation['responses']
+      return "#{method_name} #{path} responses must be an object" if !responses.nil? && !responses.is_a?(Hash)
+      next unless responses.is_a?(Hash)
+
+      responses.each do |status, response|
+        return "#{method_name} #{path} #{status} response must be an object" unless response.is_a?(Hash)
+
+        content = response['content']
+        return "#{method_name} #{path} #{status} response content must be an object" if !content.nil? && !content.is_a?(Hash)
+
+        json_content = content['application/json'] if content.is_a?(Hash)
+        if !json_content.nil? && !json_content.is_a?(Hash)
+          return "#{method_name} #{path} #{status} response application/json content must be an object"
+        end
+
+        schema = json_content['schema'] if json_content.is_a?(Hash)
+        return "#{method_name} #{path} #{status} response schema must be an object" if !schema.nil? && !schema.is_a?(Hash)
+      end
+    end
+  end
+
+  nil
+end
+
 spec_source = File.read('spec.yaml')
 begin
   spec = YAML.safe_load(spec_source, aliases: true)
@@ -82,6 +187,10 @@ unless spec.is_a?(Hash)
 end
 if cyclic_object_graph?(spec)
   warn 'spec.yaml contains cyclic YAML aliases'
+  exit 1
+end
+if (shape_error = openapi_container_shape_error(spec))
+  warn shape_error
   exit 1
 end
 
@@ -190,6 +299,12 @@ def validate_references(root, document, root_path, errors)
       end
     end
   end
+end
+
+def duplicate_values(values)
+  counts = Hash.new(0)
+  values.each { |value| counts[value] += 1 }
+  counts.select { |_value, count| count > 1 }.keys
 end
 
 documented_operations = {}
@@ -362,7 +477,7 @@ paths.each do |path, path_item|
     response_statuses = responses.keys.map(&:to_s)
     documented_statuses = documented_responses.fetch([path, method_name], [])
 
-    documented_duplicates = documented_statuses.tally.select { |_status, count| count > 1 }.keys
+    documented_duplicates = duplicate_values(documented_statuses)
     unless documented_duplicates.empty?
       errors << "spec.md response list for #{method_name} #{path} duplicates #{documented_duplicates.join(', ')}"
     end
@@ -402,7 +517,7 @@ documented_operations.each_key do |path, method_name|
   errors << "spec.md documents #{method_name} #{path}, but spec.yaml has no matching operation"
 end
 
-duplicates = operation_ids.tally.select { |_id, count| count > 1 }.keys
+duplicates = duplicate_values(operation_ids)
 errors << "duplicate operationId values: #{duplicates.join(', ')}" unless duplicates.empty?
 
 if errors.any?
