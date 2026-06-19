@@ -14,6 +14,7 @@ CYCLIC_ALIAS_PLAN="$DOCS_PLANS/2026-06-15-cyclic-yaml-alias-validation.md"
 PARSER_RECURSION_PLAN="$DOCS_PLANS/2026-06-15-yaml-parser-recursion-guard.md"
 GENERATOR_RECURSION_PLAN="$DOCS_PLANS/2026-06-15-yaml-generator-recursion-guard.md"
 GRAPH_WALKER_PLAN="$DOCS_PLANS/2026-06-16-yaml-graph-walker-depth.md"
+DOCUMENT_ROOT_PLAN="$DOCS_PLANS/2026-06-17-yaml-document-root-validation.md"
 LOCATION_INDEPENDENT_MAKE_PLAN="$DOCS_PLANS/2026-06-14-location-independent-make.md"
 WORKFLOW="$ROOT_DIR/.github/workflows/check.yml"
 
@@ -54,6 +55,7 @@ for path in \
   "docs/plans/2026-06-15-yaml-parser-recursion-guard.md" \
   "docs/plans/2026-06-15-yaml-generator-recursion-guard.md" \
   "docs/plans/2026-06-16-yaml-graph-walker-depth.md" \
+  "docs/plans/2026-06-17-yaml-document-root-validation.md" \
   "docs/plans/2026-06-14-location-independent-make.md" \
   ".github/workflows/check.yml" \
   "scripts/check-baseline.sh"; do
@@ -464,6 +466,76 @@ for plan_contract in \
 done
 if grep -Eiq 'pending|in[[:space:]]+progress|remain(s|ed)?[[:space:]]+(unfinished|to[[:space:]]+be)' "$GRAPH_WALKER_PLAN"; then
   printf '%s\n' 'YAML graph walker plan must not retain provisional verification language.' >&2
+  exit 1
+fi
+
+for root_guard_contract in \
+  'unless spec.is_a?(Hash)' \
+  'spec.yaml root must be a mapping for OpenAPI validation'; do
+  if ! grep -Fq "$root_guard_contract" "$VALIDATOR"; then
+    printf '%s\n' "OpenAPI validator must preserve the document-root guard: $root_guard_contract" >&2
+    exit 1
+  fi
+done
+for root_guard_contract in \
+  'unless spec.is_a?(Hash)' \
+  'spec.yaml root must be a mapping for Markdown generation'; do
+  if ! grep -Fq "$root_guard_contract" "$GENERATOR"; then
+    printf '%s\n' "OpenAPI generator must preserve the document-root guard: $root_guard_contract" >&2
+    exit 1
+  fi
+done
+validator_root_line=$(grep -nF 'unless spec.is_a?(Hash)' "$VALIDATOR" | cut -d: -f1)
+validator_cycle_line=$(grep -nF 'if cyclic_object_graph?(spec)' "$VALIDATOR" | cut -d: -f1)
+validator_generator_line=$(grep -nF "unless File.file?(generator) && system(generator, '--check'" "$VALIDATOR" | cut -d: -f1)
+if [ -z "$validator_root_line" ] || [ -z "$validator_cycle_line" ] || [ -z "$validator_generator_line" ] ||
+   [ "$validator_root_line" -ge "$validator_cycle_line" ] || [ "$validator_root_line" -ge "$validator_generator_line" ]; then
+  printf '%s\n' 'OpenAPI validator must reject non-mapping roots before graph traversal or generator invocation.' >&2
+  exit 1
+fi
+generator_root_line=$(grep -nF 'unless spec.is_a?(Hash)' "$GENERATOR" | cut -d: -f1)
+generator_render_line=$(grep -nF 'generated = generate_reference(spec)' "$GENERATOR" | cut -d: -f1)
+if [ -z "$generator_root_line" ] || [ -z "$generator_render_line" ] || [ "$generator_root_line" -ge "$generator_render_line" ]; then
+  printf '%s\n' 'OpenAPI generator must reject non-mapping roots before rendering.' >&2
+  exit 1
+fi
+for fixture_contract in \
+  'assert_document_root_rejected "empty"' \
+  'assert_document_root_rejected "scalar"' \
+  'assert_document_root_rejected "sequence"'; do
+  if ! grep -Fq "$fixture_contract" "$ROOT_DIR/scripts/test-validator.sh" ||
+     ! grep -Fq "$fixture_contract" "$ROOT_DIR/scripts/test-generator.sh"; then
+    printf '%s\n' "Document-root tests must preserve both entry-point fixtures: $fixture_contract" >&2
+    exit 1
+  fi
+done
+for fixture_contract in \
+  'The generator must not run for a $label YAML document root.' \
+  'cmp "$ROOT_DIR/spec.md" "$WORK_DIR/spec.md"'; do
+  if ! grep -Fq "$fixture_contract" "$ROOT_DIR/scripts/test-validator.sh" &&
+     ! grep -Fq "$fixture_contract" "$ROOT_DIR/scripts/test-generator.sh"; then
+    printf '%s\n' "Document-root tests must preserve rejection side effects: $fixture_contract" >&2
+    exit 1
+  fi
+done
+if ! grep -Fq "'docs/plans/2026-06-17-yaml-document-root-validation.md'" "$VALIDATOR"; then
+  printf '%s\n' 'OpenAPI validator must register the YAML document-root plan.' >&2
+  exit 1
+fi
+for plan_contract in \
+  '## Status Completed' \
+  '## Work Completed' \
+  '## Verification Completed' \
+  'make check' \
+  'hostile mutations' \
+  'spec.yaml` and `spec.md` remained byte-identical'; do
+  if ! grep -Fq "$plan_contract" "$DOCUMENT_ROOT_PLAN"; then
+    printf '%s\n' "YAML document-root plan must preserve completed evidence: $plan_contract" >&2
+    exit 1
+  fi
+done
+if grep -Eiq 'pending|in[[:space:]]+progress|remain(s|ed)?[[:space:]]+(unfinished|to[[:space:]]+be)' "$DOCUMENT_ROOT_PLAN"; then
+  printf '%s\n' 'YAML document-root plan must not retain provisional verification language.' >&2
   exit 1
 fi
 

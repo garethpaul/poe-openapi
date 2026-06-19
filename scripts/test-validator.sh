@@ -81,6 +81,31 @@ assert_parser_recursion_rejected() {
   fi
 }
 
+assert_document_root_rejected() {
+  label=$1
+  call_log="$TMP_DIR/generator-call"
+  rm -f "$call_log"
+  if output=$(GENERATOR_CALL_LOG="$call_log" "$TMP_DIR/scripts/validate-openapi.rb" 2>&1); then
+    printf '%s\n' "Validator accepted a $label YAML document root." >&2
+    exit 1
+  fi
+  if [ "$output" != "spec.yaml root must be a mapping for OpenAPI validation" ]; then
+    printf '%s\n%s\n' "Validator returned the wrong $label root error:" "$output" >&2
+    exit 1
+  fi
+  if [ -e "$call_log" ]; then
+    printf '%s\n' "The generator must not run for a $label YAML document root." >&2
+    exit 1
+  fi
+}
+
+: > "$TMP_DIR/spec.yaml"
+assert_document_root_rejected "empty"
+printf '%s\n' 'scalar-root' > "$TMP_DIR/spec.yaml"
+assert_document_root_rejected "scalar"
+printf '%s\n' '- sequence-root' > "$TMP_DIR/spec.yaml"
+assert_document_root_rejected "sequence"
+
 cp "$ROOT_DIR/spec.yaml" "$TMP_DIR/spec.yaml"
 ruby - "$TMP_DIR/spec.yaml" <<'RUBY'
 path = ARGV.fetch(0)

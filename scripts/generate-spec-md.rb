@@ -147,6 +147,10 @@ rescue SystemStackError
   warn 'spec.yaml exceeds the YAML generator parser nesting limit'
   exit 1
 end
+unless spec.is_a?(Hash)
+  warn 'spec.yaml root must be a mapping for Markdown generation'
+  exit 1
+end
 
 generated = generate_reference(spec)
 if ARGV == ['--check']

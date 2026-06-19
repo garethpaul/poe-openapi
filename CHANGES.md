@@ -1,5 +1,10 @@
 # Changes
 
+## 2026-06-17
+
+- Added deterministic validator and generator rejection for empty, scalar, and
+  sequence YAML document roots before downstream OpenAPI processing.
+
 ## 2026-06-16
 
 - Replaced recursive whole-document validation with bounded iterative graph

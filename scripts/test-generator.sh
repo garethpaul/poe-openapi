@@ -11,6 +11,28 @@ cp "$ROOT_DIR/spec.yaml" "$ROOT_DIR/spec.md" "$WORK_DIR/"
 chmod +x "$WORK_DIR/scripts/generate-spec-md.rb"
 
 "$ROOT_DIR/scripts/generate-spec-md.rb" --check
+
+assert_document_root_rejected() {
+  label=$1
+  cp "$ROOT_DIR/spec.md" "$WORK_DIR/spec.md"
+  if output=$("$WORK_DIR/scripts/generate-spec-md.rb" 2>&1); then
+    printf '%s\n' "generator accepted a $label YAML document root" >&2
+    exit 1
+  fi
+  if [ "$output" != "spec.yaml root must be a mapping for Markdown generation" ]; then
+    printf '%s\n%s\n' "generator returned the wrong $label root error:" "$output" >&2
+    exit 1
+  fi
+  cmp "$ROOT_DIR/spec.md" "$WORK_DIR/spec.md"
+}
+
+: > "$WORK_DIR/spec.yaml"
+assert_document_root_rejected "empty"
+printf '%s\n' 'scalar-root' > "$WORK_DIR/spec.yaml"
+assert_document_root_rejected "scalar"
+printf '%s\n' '- sequence-root' > "$WORK_DIR/spec.yaml"
+assert_document_root_rejected "sequence"
+
 cp "$ROOT_DIR/spec.yaml" "$WORK_DIR/spec.yaml"
 cp "$WORK_DIR/spec.md" "$WORK_DIR/spec.md.before-recursion"
 ruby - "$WORK_DIR/spec.yaml" <<'RUBY'

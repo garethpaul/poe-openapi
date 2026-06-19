@@ -28,7 +28,8 @@ PLANS = [
   'docs/plans/2026-06-13-generated-markdown-spec.md',
   'docs/plans/2026-06-15-cyclic-yaml-alias-validation.md',
   'docs/plans/2026-06-15-yaml-parser-recursion-guard.md',
-  'docs/plans/2026-06-16-yaml-graph-walker-depth.md'
+  'docs/plans/2026-06-16-yaml-graph-walker-depth.md',
+  'docs/plans/2026-06-17-yaml-document-root-validation.md'
 ].freeze
 
 HTTP_METHODS = %w[get put post delete options head patch trace].freeze
@@ -73,6 +74,10 @@ begin
   spec = YAML.safe_load(spec_source, aliases: true)
 rescue SystemStackError
   warn 'spec.yaml exceeds the YAML parser nesting limit'
+  exit 1
+end
+unless spec.is_a?(Hash)
+  warn 'spec.yaml root must be a mapping for OpenAPI validation'
   exit 1
 end
 if cyclic_object_graph?(spec)
