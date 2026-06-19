@@ -12,6 +12,7 @@ PATH_ITEM_PLAN="$DOCS_PLANS/2026-06-13-path-item-metadata-validation.md"
 GENERATED_MARKDOWN_PLAN="$DOCS_PLANS/2026-06-13-generated-markdown-spec.md"
 CYCLIC_ALIAS_PLAN="$DOCS_PLANS/2026-06-15-cyclic-yaml-alias-validation.md"
 PARSER_RECURSION_PLAN="$DOCS_PLANS/2026-06-15-yaml-parser-recursion-guard.md"
+GENERATOR_RECURSION_PLAN="$DOCS_PLANS/2026-06-15-yaml-generator-recursion-guard.md"
 LOCATION_INDEPENDENT_MAKE_PLAN="$DOCS_PLANS/2026-06-14-location-independent-make.md"
 WORKFLOW="$ROOT_DIR/.github/workflows/check.yml"
 
@@ -50,6 +51,7 @@ for path in \
   "docs/plans/2026-06-13-generated-markdown-spec.md" \
   "docs/plans/2026-06-15-cyclic-yaml-alias-validation.md" \
   "docs/plans/2026-06-15-yaml-parser-recursion-guard.md" \
+  "docs/plans/2026-06-15-yaml-generator-recursion-guard.md" \
   "docs/plans/2026-06-14-location-independent-make.md" \
   ".github/workflows/check.yml" \
   "scripts/check-baseline.sh"; do
@@ -367,6 +369,56 @@ if grep -Eiq 'pending|in[[:space:]]+progress|remain(s|ed)?[[:space:]]+(unfinishe
   printf '%s\n' 'Parser recursion plan must not retain provisional verification language.' >&2
   exit 1
 fi
+
+generator_parse_block=$(sed -n '/^spec_source = File.read/,/^generated = generate_reference/p' "$GENERATOR")
+for generator_contract in \
+  'spec_source = File.read(SPEC_PATH)' \
+  'spec = YAML.safe_load(spec_source, aliases: true)' \
+  'rescue SystemStackError' \
+  "warn 'spec.yaml exceeds the YAML generator parser nesting limit'" \
+  'generated = generate_reference(spec)'; do
+  if ! printf '%s\n' "$generator_parse_block" | grep -Fq "$generator_contract"; then
+    printf '%s\n' "YAML generator recursion guard must preserve: $generator_contract" >&2
+    exit 1
+  fi
+done
+if printf '%s\n' "$generator_parse_block" | grep -Eq 'rescue (StandardError|Exception)'; then
+  printf '%s\n' 'YAML generator recursion guard must not broaden beyond SystemStackError.' >&2
+  exit 1
+fi
+for fixture_contract in \
+  'generator accepted YAML beyond the parser nesting limit' \
+  'generator returned the wrong parser recursion error:' \
+  'spec.yaml exceeds the YAML generator parser nesting limit' \
+  'cmp "$WORK_DIR/spec.md.before-recursion" "$WORK_DIR/spec.md"'; do
+  if ! grep -Fq "$fixture_contract" "$ROOT_DIR/scripts/test-generator.sh"; then
+    printf '%s\n' "Generator recursion tests must preserve: $fixture_contract" >&2
+    exit 1
+  fi
+done
+for plan_contract in \
+  'status: completed' \
+  '## Work Completed' \
+  '## Verification Completed' \
+  'All four Make gates passed' \
+  'external directory' \
+  'Six isolated hostile mutations were rejected'; do
+  if ! grep -Fq "$plan_contract" "$GENERATOR_RECURSION_PLAN"; then
+    printf '%s\n' "Generator recursion plan must preserve completed evidence: $plan_contract" >&2
+    exit 1
+  fi
+done
+if grep -Eiq 'pending|in[[:space:]]+progress|remain(s|ed)?[[:space:]]+(unfinished|to[[:space:]]+be)' "$GENERATOR_RECURSION_PLAN"; then
+  printf '%s\n' 'Generator recursion plan must not retain provisional verification language.' >&2
+  exit 1
+fi
+
+for document in "$README" "$ROOT_DIR/SECURITY.md" "$ROOT_DIR/VISION.md" "$ROOT_DIR/CHANGES.md"; do
+  if ! grep -Fqi 'generator parser recursion failures' "$document"; then
+    printf '%s\n' "$document must document generator parser recursion failures." >&2
+    exit 1
+  fi
+done
 
 for document in "$README" "$ROOT_DIR/SECURITY.md" "$ROOT_DIR/VISION.md" "$ROOT_DIR/CHANGES.md"; do
   if ! grep -Fq "Path Item metadata" "$document"; then

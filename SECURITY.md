@@ -1,5 +1,8 @@
 # Security Policy
 
+Generator parser recursion failures must fail closed before generated Markdown
+replacement and must not expose a Ruby stack trace.
+
 ## Supported Versions
 
 The supported security scope for `poe-openapi` is the current default branch, `main`. Older commits, tags, branches, forks, demos, and generated artifacts are not actively supported unless the repository explicitly marks them as maintained.

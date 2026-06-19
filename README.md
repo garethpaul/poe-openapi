@@ -1,5 +1,8 @@
 # poe-openapi
 
+Generator parser recursion failures produce one stable diagnostic before
+`spec.md` can be replaced.
+
 <!-- README-OVERVIEW-IMAGE -->
 ![Project overview](docs/readme-overview.svg)
 

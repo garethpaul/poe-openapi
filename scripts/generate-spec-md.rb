@@ -140,7 +140,15 @@ unless ARGV.empty? || ARGV == ['--check']
   exit 64
 end
 
-generated = generate_reference(YAML.safe_load(File.read(SPEC_PATH), aliases: true))
+spec_source = File.read(SPEC_PATH)
+begin
+  spec = YAML.safe_load(spec_source, aliases: true)
+rescue SystemStackError
+  warn 'spec.yaml exceeds the YAML generator parser nesting limit'
+  exit 1
+end
+
+generated = generate_reference(spec)
 if ARGV == ['--check']
   unless File.file?(REFERENCE_PATH) && File.read(REFERENCE_PATH) == generated
     warn 'spec.md is out of date; run scripts/generate-spec-md.rb'

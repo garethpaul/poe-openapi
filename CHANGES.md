@@ -1,5 +1,10 @@
 # Changes
 
+## 2026-06-15
+
+- Converted generator parser recursion failures to one stable diagnostic before
+  `spec.md` replacement.
+
 ## 2026-06-13
 
 - Added deterministic, dependency-free `spec.md` generation from `spec.yaml`,
