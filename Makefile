@@ -1,17 +1,19 @@
 .PHONY: check generate lint test build verify
 
-check: verify
-	scripts/check-baseline.sh
+override REPO_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
-generate: scripts/generate-spec-md.rb spec.yaml
-	scripts/generate-spec-md.rb
+check: verify
+	cd "$(REPO_ROOT)" && scripts/check-baseline.sh
+
+generate: $(REPO_ROOT)/scripts/generate-spec-md.rb $(REPO_ROOT)/spec.yaml
+	cd "$(REPO_ROOT)" && scripts/generate-spec-md.rb
 
 lint:
-	scripts/validate-openapi.rb
+	cd "$(REPO_ROOT)" && scripts/validate-openapi.rb
 
 test: lint
-	scripts/test-validator.sh
-	scripts/test-generator.sh
+	cd "$(REPO_ROOT)" && scripts/test-validator.sh
+	cd "$(REPO_ROOT)" && scripts/test-generator.sh
 
 build: lint
 
