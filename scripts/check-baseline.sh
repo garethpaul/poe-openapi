@@ -48,6 +48,7 @@ for path in \
   "docs/plans/2026-06-12-credential-free-openapi-validation.md" \
   "docs/plans/2026-06-12-response-description-validation.md" \
   "docs/plans/2026-06-12-self-contained-reference-validation.md" \
+  "docs/plans/2026-06-12-supported-ruby-matrix.md" \
   "docs/plans/2026-06-13-operation-id-validation.md" \
   "docs/plans/2026-06-13-path-item-metadata-validation.md" \
   "docs/plans/2026-06-13-generated-markdown-spec.md" \
@@ -162,8 +163,8 @@ for validator_generation_contract in \
   fi
 done
 
-if ! grep -Fq 'Ruby and `make`' "$README"; then
-  printf '%s\n' 'README must document Ruby and `make`.' >&2
+if ! grep -Fq 'Ruby 3.4 or Ruby 4.0 and `make`' "$README"; then
+  printf '%s\n' 'README must document supported Ruby releases and `make`.' >&2
   exit 1
 fi
 
@@ -186,6 +187,11 @@ fi
 
 if ! grep -Fq "docs/plans/2026-06-12-self-contained-reference-validation.md" "$VALIDATOR"; then
   printf '%s\n' "OpenAPI validator must include the self-contained reference plan." >&2
+  exit 1
+fi
+
+if ! grep -Fq "docs/plans/2026-06-12-supported-ruby-matrix.md" "$VALIDATOR"; then
+  printf '%s\n' "OpenAPI validator must include the supported Ruby matrix plan." >&2
   exit 1
 fi
 
@@ -703,7 +709,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ruby-version: ["2.7", "3.3"]
+        ruby-version: ["3.4", "4.0"]
     steps:
       - name: Check out repository
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
@@ -722,6 +728,33 @@ if [ "$actual_workflow" != "$expected_workflow" ]; then
   printf '%s\n' "Hosted validation must match the exact pinned, credential-free OpenAPI contract." >&2
   exit 1
 fi
+
+if ! grep -Fq 'Ruby 3.4 and Ruby 4.0' "$README"; then
+  printf '%s\n' "README must document the supported Ruby 3.4 and Ruby 4.0 matrix." >&2
+  exit 1
+fi
+
+if ! grep -Fq 'Supported verification runtimes: Ruby 3.4 and Ruby 4.0' "$ROOT_DIR/AGENTS.md"; then
+  printf '%s\n' "AGENTS.md must document the supported Ruby matrix." >&2
+  exit 1
+fi
+
+if ! grep -Fq 'Ruby 3.4 plus Ruby 4.0' "$ROOT_DIR/SECURITY.md"; then
+  printf '%s\n' "SECURITY.md must document the supported Ruby matrix." >&2
+  exit 1
+fi
+
+if ! grep -Fq 'maintained Ruby 3.4 and Ruby 4.0' "$ROOT_DIR/VISION.md"; then
+  printf '%s\n' "VISION.md must document the maintained Ruby matrix." >&2
+  exit 1
+fi
+
+for policy_file in "$README" "$ROOT_DIR/AGENTS.md" "$ROOT_DIR/SECURITY.md" "$ROOT_DIR/VISION.md"; do
+  if grep -Eq 'Ruby (2\.7|3\.3)' "$policy_file"; then
+    printf '%s\n' "$policy_file must not advertise obsolete Ruby validation lanes." >&2
+    exit 1
+  fi
+done
 
 for guardrail in "make check" "spec.yaml" "security scheme" "credential-adjacent"; do
   if ! grep -Fqi "$guardrail" "$ROOT_DIR/AGENTS.md"; then
