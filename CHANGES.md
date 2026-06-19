@@ -8,6 +8,8 @@
 
 ## 2026-06-12
 
+- Replaced the end-of-life Ruby 2.7 and security-only Ruby 3.3 CI lanes with
+  maintained Ruby 3.4 and Ruby 4.0 coverage.
 - Added response-description validation so missing or whitespace-only OpenAPI
   response descriptions fail before reaching generated documentation.
 - Added a dependency-free mutation test and wired it through `make test` and
