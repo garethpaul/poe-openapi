@@ -11,6 +11,7 @@ DOCS_PLANS="$ROOT_DIR/docs/plans"
 PATH_ITEM_PLAN="$DOCS_PLANS/2026-06-13-path-item-metadata-validation.md"
 GENERATED_MARKDOWN_PLAN="$DOCS_PLANS/2026-06-13-generated-markdown-spec.md"
 CYCLIC_ALIAS_PLAN="$DOCS_PLANS/2026-06-15-cyclic-yaml-alias-validation.md"
+PARSER_RECURSION_PLAN="$DOCS_PLANS/2026-06-15-yaml-parser-recursion-guard.md"
 LOCATION_INDEPENDENT_MAKE_PLAN="$DOCS_PLANS/2026-06-14-location-independent-make.md"
 WORKFLOW="$ROOT_DIR/.github/workflows/check.yml"
 
@@ -48,6 +49,7 @@ for path in \
   "docs/plans/2026-06-13-path-item-metadata-validation.md" \
   "docs/plans/2026-06-13-generated-markdown-spec.md" \
   "docs/plans/2026-06-15-cyclic-yaml-alias-validation.md" \
+  "docs/plans/2026-06-15-yaml-parser-recursion-guard.md" \
   "docs/plans/2026-06-14-location-independent-make.md" \
   ".github/workflows/check.yml" \
   "scripts/check-baseline.sh"; do
@@ -288,6 +290,81 @@ for plan_contract in \
 done
 if grep -Eiq 'pending|in[[:space:]]+progress|remain(s|ed)?[[:space:]]+(unfinished|to[[:space:]]+be)' "$CYCLIC_ALIAS_PLAN"; then
   printf '%s\n' 'Cyclic-alias plan must not retain provisional verification language.' >&2
+  exit 1
+fi
+
+parser_load_block=$(sed -n '/^begin$/,/^end$/p' "$VALIDATOR")
+if ! grep -Fqx "spec_source = File.read('spec.yaml')" "$VALIDATOR"; then
+  printf '%s\n' 'YAML parser recursion guard must read spec.yaml outside the rescue boundary.' >&2
+  exit 1
+fi
+for executable_contract in \
+  '  spec = YAML.safe_load(spec_source, aliases: true)' \
+  'rescue SystemStackError' \
+  "  warn 'spec.yaml exceeds the YAML parser nesting limit'" \
+  '  exit 1'; do
+  if ! printf '%s\n' "$parser_load_block" | grep -Fqx "$executable_contract"; then
+    printf '%s\n' "YAML parser recursion guard must preserve executable line: $executable_contract" >&2
+    exit 1
+  fi
+done
+if printf '%s\n' "$parser_load_block" | grep -Eq '^rescue([[:space:]]*$|[[:space:]]+(Exception|NoMemoryError|ScriptError))'; then
+  printf '%s\n' 'YAML parser recursion guard must not broaden beyond SystemStackError.' >&2
+  exit 1
+fi
+
+parser_assertion=$(sed -n '/^assert_parser_recursion_rejected() {/,/^}/p' "$ROOT_DIR/scripts/test-validator.sh")
+for executable_contract in \
+  '  if output=$(GENERATOR_CALL_LOG="$call_log" ruby -rtimeout -e \' \
+  "    'Timeout.timeout(5) { load ARGV.fetch(0) }' \\" \
+  '  if [ "$output" != "spec.yaml exceeds the YAML parser nesting limit" ]; then' \
+  '  if [ -e "$call_log" ]; then'; do
+  if ! printf '%s\n' "$parser_assertion" | grep -Fqx "$executable_contract"; then
+    printf '%s\n' "Parser recursion assertion must preserve executable line: $executable_contract" >&2
+    exit 1
+  fi
+done
+if printf '%s\n' "$parser_assertion" | grep -Eq '^[[:space:]]*return([[:space:]]|$)'; then
+  printf '%s\n' 'Parser recursion assertion must not bypass its executable checks.' >&2
+  exit 1
+fi
+if [ "$(grep -Ec '^[[:space:]]*assert_parser_recursion_rejected[[:space:]]*$' "$ROOT_DIR/scripts/test-validator.sh")" -ne 1 ]; then
+  printf '%s\n' 'Validator tests must execute exactly one parser recursion scenario.' >&2
+  exit 1
+fi
+for fixture_contract in \
+  '1.upto(2_000)' \
+  'Validator rejected a shallow acyclic YAML mapping.' \
+  "*'Psych::SyntaxError'*)" \
+  'Malformed YAML was mislabeled as parser recursion.'; do
+  if ! grep -Fq "$fixture_contract" "$ROOT_DIR/scripts/test-validator.sh"; then
+    printf '%s\n' "Parser recursion tests must preserve: $fixture_contract" >&2
+    exit 1
+  fi
+done
+if ! grep -Fq "'docs/plans/2026-06-15-yaml-parser-recursion-guard.md'" "$VALIDATOR"; then
+  printf '%s\n' 'OpenAPI validator must register the YAML parser recursion plan.' >&2
+  exit 1
+fi
+
+for plan_contract in \
+  '## Status' \
+  'Completed' \
+  '## Verification Completed' \
+  'Ruby 2.7.0' \
+  'Ruby 3.3.11' \
+  'absolute-Makefile `make check`' \
+  'isolated hostile mutations were rejected' \
+  'git diff --check' \
+  'credential-pattern' \
+  'spec.yaml` and `spec.md` remained byte-identical'; do
+  if ! grep -Fq "$plan_contract" "$PARSER_RECURSION_PLAN"; then
+    printf '%s\n' "Parser recursion plan must preserve completed evidence: $plan_contract" >&2
+    exit 1
+  fi
+done
+if grep -Eiq 'pending|in[[:space:]]+progress|remain(s|ed)?[[:space:]]+(unfinished|to[[:space:]]+be)' "$PARSER_RECURSION_PLAN"; then
+  printf '%s\n' 'Parser recursion plan must not retain provisional verification language.' >&2
   exit 1
 fi
 
