@@ -27,7 +27,8 @@ PLANS = [
   'docs/plans/2026-06-13-path-item-metadata-validation.md',
   'docs/plans/2026-06-13-generated-markdown-spec.md',
   'docs/plans/2026-06-15-cyclic-yaml-alias-validation.md',
-  'docs/plans/2026-06-15-yaml-parser-recursion-guard.md'
+  'docs/plans/2026-06-15-yaml-parser-recursion-guard.md',
+  'docs/plans/2026-06-16-yaml-graph-walker-depth.md'
 ].freeze
 
 HTTP_METHODS = %w[get put post delete options head patch trace].freeze
@@ -87,9 +88,34 @@ unless File.file?(generator) && system(generator, '--check', out: File::NULL, er
   errors << 'spec.md must match scripts/generate-spec-md.rb output'
 end
 
-def validate_property_descriptions(node, path, errors)
-  case node
-  when Hash
+def each_graph_node(root, root_path)
+  visited = {}
+  stack = [[root, root_path]]
+
+  until stack.empty?
+    node, path = stack.pop
+    next unless node.is_a?(Hash) || node.is_a?(Array)
+    next if visited[node.object_id]
+
+    visited[node.object_id] = true
+    yield node, path
+
+    if node.is_a?(Hash)
+      node.reverse_each do |key, value|
+        stack << [value, "#{path}.#{key}"]
+      end
+    else
+      (node.length - 1).downto(0) do |index|
+        stack << [node[index], "#{path}[#{index}]"]
+      end
+    end
+  end
+end
+
+def validate_property_descriptions(root, root_path, errors)
+  each_graph_node(root, root_path) do |node, path|
+    next unless node.is_a?(Hash)
+
     if node['properties'].is_a?(Hash)
       node['properties'].each do |property_name, property_schema|
         property_path = "#{path}.properties.#{property_name}"
@@ -98,20 +124,13 @@ def validate_property_descriptions(node, path, errors)
         errors << "spec.yaml schema property #{property_path} missing description" if description.to_s.empty?
       end
     end
-
-    node.each do |key, value|
-      validate_property_descriptions(value, "#{path}.#{key}", errors)
-    end
-  when Array
-    node.each_with_index do |value, index|
-      validate_property_descriptions(value, "#{path}[#{index}]", errors)
-    end
   end
 end
 
-def validate_required_properties(node, path, errors)
-  case node
-  when Hash
+def validate_required_properties(root, root_path, errors)
+  each_graph_node(root, root_path) do |node, path|
+    next unless node.is_a?(Hash)
+
     if node['required'].is_a?(Array)
       properties = node['properties']
       if properties.is_a?(Hash)
@@ -123,14 +142,6 @@ def validate_required_properties(node, path, errors)
       else
         errors << "spec.yaml schema #{path} declares required fields without properties"
       end
-    end
-
-    node.each do |key, value|
-      validate_required_properties(value, "#{path}.#{key}", errors)
-    end
-  when Array
-    node.each_with_index do |value, index|
-      validate_required_properties(value, "#{path}[#{index}]", errors)
     end
   end
 end
@@ -157,9 +168,10 @@ def resolve_json_pointer(document, reference)
   end
 end
 
-def validate_references(node, document, path, errors)
-  case node
-  when Hash
+def validate_references(root, document, root_path, errors)
+  each_graph_node(root, root_path) do |node, path|
+    next unless node.is_a?(Hash)
+
     if node.key?('$ref')
       reference = node['$ref']
       if !reference.is_a?(String)
@@ -171,14 +183,6 @@ def validate_references(node, document, path, errors)
       elsif resolve_json_pointer(document, reference).nil?
         errors << "spec.yaml #{path} contains unresolved local reference `#{reference}`"
       end
-    end
-
-    node.each do |key, value|
-      validate_references(value, document, "#{path}.#{key}", errors)
-    end
-  when Array
-    node.each_with_index do |value, index|
-      validate_references(value, document, "#{path}[#{index}]", errors)
     end
   end
 end

@@ -13,6 +13,7 @@ GENERATED_MARKDOWN_PLAN="$DOCS_PLANS/2026-06-13-generated-markdown-spec.md"
 CYCLIC_ALIAS_PLAN="$DOCS_PLANS/2026-06-15-cyclic-yaml-alias-validation.md"
 PARSER_RECURSION_PLAN="$DOCS_PLANS/2026-06-15-yaml-parser-recursion-guard.md"
 GENERATOR_RECURSION_PLAN="$DOCS_PLANS/2026-06-15-yaml-generator-recursion-guard.md"
+GRAPH_WALKER_PLAN="$DOCS_PLANS/2026-06-16-yaml-graph-walker-depth.md"
 LOCATION_INDEPENDENT_MAKE_PLAN="$DOCS_PLANS/2026-06-14-location-independent-make.md"
 WORKFLOW="$ROOT_DIR/.github/workflows/check.yml"
 
@@ -52,6 +53,7 @@ for path in \
   "docs/plans/2026-06-15-cyclic-yaml-alias-validation.md" \
   "docs/plans/2026-06-15-yaml-parser-recursion-guard.md" \
   "docs/plans/2026-06-15-yaml-generator-recursion-guard.md" \
+  "docs/plans/2026-06-16-yaml-graph-walker-depth.md" \
   "docs/plans/2026-06-14-location-independent-make.md" \
   ".github/workflows/check.yml" \
   "scripts/check-baseline.sh"; do
@@ -410,6 +412,58 @@ for plan_contract in \
 done
 if grep -Eiq 'pending|in[[:space:]]+progress|remain(s|ed)?[[:space:]]+(unfinished|to[[:space:]]+be)' "$GENERATOR_RECURSION_PLAN"; then
   printf '%s\n' 'Generator recursion plan must not retain provisional verification language.' >&2
+  exit 1
+fi
+
+for graph_walker_contract in \
+  'def each_graph_node(root, root_path)' \
+  'stack = [[root, root_path]]' \
+  'node, path = stack.pop' \
+  'next if visited[node.object_id]' \
+  'visited[node.object_id] = true' \
+  'node.reverse_each do |key, value|' \
+  '(node.length - 1).downto(0) do |index|' \
+  'each_graph_node(root, root_path) do |node, path|'; do
+  if ! grep -Fq "$graph_walker_contract" "$VALIDATOR"; then
+    printf '%s\n' "YAML graph walkers must preserve: $graph_walker_contract" >&2
+    exit 1
+  fi
+done
+if [ "$(grep -Fc 'each_graph_node(root, root_path) do |node, path|' "$VALIDATOR")" -ne 3 ]; then
+  printf '%s\n' 'All three whole-document validators must use the bounded graph walker.' >&2
+  exit 1
+fi
+for fixture_contract in \
+  '1.upto(5_000) do |index|' \
+  "Timeout.timeout(10) { load ARGV.fetch(0) }" \
+  'Validator rejected a deep acyclic YAML alias graph:' \
+  'Deep acyclic YAML alias graph exhausted the validator stack:'; do
+  if ! grep -Fq "$fixture_contract" "$ROOT_DIR/scripts/test-validator.sh"; then
+    printf '%s\n' "YAML graph walker tests must preserve: $fixture_contract" >&2
+    exit 1
+  fi
+done
+if ! grep -Fq "'docs/plans/2026-06-16-yaml-graph-walker-depth.md'" "$VALIDATOR"; then
+  printf '%s\n' 'OpenAPI validator must register the YAML graph walker plan.' >&2
+  exit 1
+fi
+for plan_contract in \
+  '## Status Completed' \
+  '## Verification Completed' \
+  'Ruby 2.7.0' \
+  'Ruby 3.3' \
+  'external-directory `make check`' \
+  'isolated hostile mutations were rejected' \
+  'git diff --check' \
+  'credential-pattern' \
+  'spec.yaml` and `spec.md` remained byte-identical'; do
+  if ! grep -Fq "$plan_contract" "$GRAPH_WALKER_PLAN"; then
+    printf '%s\n' "YAML graph walker plan must preserve completed evidence: $plan_contract" >&2
+    exit 1
+  fi
+done
+if grep -Eiq 'pending|in[[:space:]]+progress|remain(s|ed)?[[:space:]]+(unfinished|to[[:space:]]+be)' "$GRAPH_WALKER_PLAN"; then
+  printf '%s\n' 'YAML graph walker plan must not retain provisional verification language.' >&2
   exit 1
 fi
 

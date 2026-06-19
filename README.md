@@ -1,7 +1,8 @@
 # poe-openapi
 
 Generator parser recursion failures produce one stable diagnostic before
-`spec.md` can be replaced.
+`spec.md` can be replaced. Loaded YAML graphs use bounded iterative validation
+so deep acyclic aliases cannot exhaust the Ruby call stack.
 
 <!-- README-OVERVIEW-IMAGE -->
 ![Project overview](docs/readme-overview.svg)

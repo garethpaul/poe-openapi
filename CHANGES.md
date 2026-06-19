@@ -1,5 +1,10 @@
 # Changes
 
+## 2026-06-16
+
+- Replaced recursive whole-document validation with bounded iterative graph
+  traversal so deep acyclic YAML aliases cannot exhaust the Ruby call stack.
+
 ## 2026-06-15
 
 - Converted generator parser recursion failures to one stable diagnostic before
