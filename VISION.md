@@ -30,6 +30,8 @@ Priority:
   reference
 - Keep OpenAPI schema `required` lists aligned with declared properties
 - Keep documented response status codes aligned with the OpenAPI contract
+- Keep operation IDs string-valued, non-empty, unique, and aligned with the
+  Markdown endpoint reference
 - Require every response status to retain a non-empty OpenAPI description
 - Keep every OpenAPI reference local, string-valued, and resolvable so the
   machine-readable contract remains self-contained

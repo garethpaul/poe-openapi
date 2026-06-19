@@ -1,5 +1,11 @@
 # Changes
 
+## 2026-06-13
+
+- Strengthened operation ID validation to reject missing, blank, and
+  non-string values with stable diagnostics while preserving uniqueness.
+- Added dependency-free mutations for malformed and duplicate operation IDs.
+
 ## 2026-06-12
 
 - Replaced the end-of-life Ruby 2.7 and security-only Ruby 3.3 CI lanes with

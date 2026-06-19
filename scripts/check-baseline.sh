@@ -37,6 +37,7 @@ for path in \
   "docs/plans/2026-06-12-response-description-validation.md" \
   "docs/plans/2026-06-12-self-contained-reference-validation.md" \
   "docs/plans/2026-06-12-supported-ruby-matrix.md" \
+  "docs/plans/2026-06-13-operation-id-validation.md" \
   ".github/workflows/check.yml" \
   "scripts/check-baseline.sh"; do
   require_file "$path"
@@ -107,6 +108,8 @@ if ! grep -Fq "docs/plans/2026-06-12-supported-ruby-matrix.md" "$VALIDATOR"; the
 fi
 
 for validator_contract in \
+  "operationId must be a non-empty string" \
+  "duplicate operationId values" \
   "response missing description" \
   "def resolve_json_pointer" \
   "contains non-local reference" \
@@ -119,6 +122,10 @@ for validator_contract in \
 done
 
 for mutation_contract in \
+  "missing operation ID" \
+  "whitespace-only operation ID" \
+  "non-string operation ID" \
+  "duplicate operation ID" \
   "whitespace-only response description" \
   "dangling local reference" \
   "external URL reference" \

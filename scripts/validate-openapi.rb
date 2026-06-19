@@ -22,7 +22,8 @@ PLANS = [
   'docs/plans/2026-06-10-local-reference-validation.md',
   'docs/plans/2026-06-12-response-description-validation.md',
   'docs/plans/2026-06-12-self-contained-reference-validation.md',
-  'docs/plans/2026-06-12-supported-ruby-matrix.md'
+  'docs/plans/2026-06-12-supported-ruby-matrix.md',
+  'docs/plans/2026-06-13-operation-id-validation.md'
 ].freeze
 
 spec = YAML.safe_load(File.read('spec.yaml'), aliases: true)
@@ -224,8 +225,11 @@ paths.each do |path, methods|
     operation_id = operation['operationId']
     documented_operation_id = documented_operations[[path, method_name]]
 
-    errors << "#{method_name} #{path} missing operationId" if operation_id.nil? || operation_id.empty?
-    operation_ids << operation_id if operation_id
+    if operation_id.is_a?(String) && !operation_id.strip.empty?
+      operation_ids << operation_id
+    else
+      errors << "#{method_name} #{path} operationId must be a non-empty string"
+    end
 
     if documented_operation_id.nil?
       errors << "spec.md missing endpoint/method section for #{method_name} #{path}"
