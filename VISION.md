@@ -21,6 +21,8 @@ Priority:
   consistency gates
 - Run the canonical dependency-free OpenAPI gate in hosted CI with read-only
   permissions and pinned third-party actions
+- Keep hosted checkout credential-free and reject workflow drift structurally
+- Preserve Ruby 2.7 compatibility while validating on modern Ruby 3.3
 - Keep the validator independent of the caller's working directory
 - Keep a scriptable baseline guard for required files and local metadata
 - Preserve required request-field documentation in the Markdown reference
@@ -29,6 +31,8 @@ Priority:
 - Keep OpenAPI schema `required` lists aligned with declared properties
 - Keep documented response status codes aligned with the OpenAPI contract
 - Require every response status to retain a non-empty OpenAPI description
+- Keep every OpenAPI reference local, string-valued, and resolvable so the
+  machine-readable contract remains self-contained
 - Keep the Markdown Error Handling section aligned with the shared Error schema
 - Keep the Markdown Security section aligned with OpenAPI security schemes
 - Keep OpenAPI security schemes self-describing for generated docs

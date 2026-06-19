@@ -18,6 +18,7 @@ require_file() {
 }
 
 for path in \
+  "AGENTS.md" \
   ".gitignore" \
   "CHANGES.md" \
   "Makefile" \
@@ -31,7 +32,10 @@ for path in \
   "docs/plans/2026-06-08-placeholder-server-validation.md" \
   "docs/plans/2026-06-09-scripted-baseline-check.md" \
   "docs/plans/2026-06-10-hosted-openapi-validation.md" \
+  "docs/plans/2026-06-10-local-reference-validation.md" \
+  "docs/plans/2026-06-12-credential-free-openapi-validation.md" \
   "docs/plans/2026-06-12-response-description-validation.md" \
+  "docs/plans/2026-06-12-self-contained-reference-validation.md" \
   ".github/workflows/check.yml" \
   "scripts/check-baseline.sh"; do
   require_file "$path"
@@ -74,7 +78,12 @@ if ! grep -Fq 'Ruby and `make`' "$README"; then
   exit 1
 fi
 
-for documented in "make check" "make build" "scripts/check-baseline.sh" "Every OpenAPI response must include a non-empty"; do
+for documented in \
+  "make check" \
+  "make build" \
+  "scripts/check-baseline.sh" \
+  'Every OpenAPI `$ref` must be a local string' \
+  "Every OpenAPI response must include a non-empty"; do
   if ! grep -Fq "$documented" "$README"; then
     printf '%s\n' "README must document $documented." >&2
     exit 1
@@ -86,30 +95,92 @@ if ! grep -Fq "docs/plans/2026-06-09-scripted-baseline-check.md" "$VALIDATOR"; t
   exit 1
 fi
 
-if ! grep -Fq "response missing description" "$VALIDATOR"; then
-  printf '%s\n' "OpenAPI validator must reject missing response descriptions." >&2
+if ! grep -Fq "docs/plans/2026-06-12-self-contained-reference-validation.md" "$VALIDATOR"; then
+  printf '%s\n' "OpenAPI validator must include the self-contained reference plan." >&2
   exit 1
 fi
+
+for validator_contract in \
+  "response missing description" \
+  "def resolve_json_pointer" \
+  "contains non-local reference" \
+  '$ref must be a string' \
+  "validate_references(spec, spec"; do
+  if ! grep -Fq "$validator_contract" "$VALIDATOR"; then
+    printf '%s\n' "OpenAPI validator must preserve: $validator_contract" >&2
+    exit 1
+  fi
+done
+
+for mutation_contract in \
+  "whitespace-only response description" \
+  "dangling local reference" \
+  "external URL reference" \
+  "relative file reference" \
+  "malformed local reference" \
+  "non-string reference" \
+  "Escaped~1Schema~0Name"; do
+  if ! grep -Fq "$mutation_contract" "$ROOT_DIR/scripts/test-validator.sh"; then
+    printf '%s\n' "Validator mutation tests must preserve: $mutation_contract" >&2
+    exit 1
+  fi
+done
 
 if ! grep -Fq "docs/plans/2026-06-10-hosted-openapi-validation.md" "$VALIDATOR"; then
   printf '%s\n' "OpenAPI validator must include the hosted validation plan." >&2
   exit 1
 fi
 
-if ! grep -Fxq 'permissions:' "$WORKFLOW" || ! grep -Fxq '  contents: read' "$WORKFLOW"; then
-  printf '%s\n' "Hosted validation must use read-only repository contents permission." >&2
+expected_workflow=$(cat <<'EOF'
+name: Check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: check-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  openapi:
+    name: OpenAPI contract validation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        ruby-version: ["2.7", "3.3"]
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@89f90524b88a01fe6e0b732220432cc6142926af # v1.313.0
+        with:
+          ruby-version: ${{ matrix.ruby-version }}
+      - name: Validate OpenAPI contract
+        run: make check
+EOF
+)
+actual_workflow=$(cat "$WORKFLOW")
+if [ "$actual_workflow" != "$expected_workflow" ]; then
+  printf '%s\n' "Hosted validation must match the exact pinned, credential-free OpenAPI contract." >&2
   exit 1
 fi
 
-if ! grep -Fq 'uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10' "$WORKFLOW"; then
-  printf '%s\n' "Hosted validation must pin the reviewed actions/checkout v6 commit." >&2
-  exit 1
-fi
-
-if ! grep -Eq '^[[:space:]]+run: make check$' "$WORKFLOW"; then
-  printf '%s\n' "Hosted validation must run the canonical make check gate." >&2
-  exit 1
-fi
+for guardrail in "make check" "spec.yaml" "security scheme" "credential-adjacent"; do
+  if ! grep -Fqi "$guardrail" "$ROOT_DIR/AGENTS.md"; then
+    printf '%s\n' "AGENTS.md must preserve the guardrail: $guardrail" >&2
+    exit 1
+  fi
+done
 
 if ! (cd / && "$VALIDATOR" >/dev/null); then
   printf '%s\n' "OpenAPI validator must run independently of the caller's working directory." >&2
@@ -123,7 +194,10 @@ for ignored in ".env" ".env.*" "*.log" ".idea/" ".vscode/" "*.iml" ".DS_Store"; 
   fi
 done
 
-tracked_local=$(git -C "$ROOT_DIR" ls-files '.env' '.env.*' '.idea' '.vscode' '*.iml' || true)
+if ! tracked_local=$(git -C "$ROOT_DIR" ls-files '.env' '.env.*' '.idea' '.vscode' '*.iml'); then
+  printf '%s\n' "Baseline must be able to inspect tracked secret and editor metadata paths." >&2
+  exit 1
+fi
 if [ -n "$tracked_local" ]; then
   printf '%s\n%s\n' "Local secrets or editor metadata must not be tracked:" "$tracked_local" >&2
   exit 1
@@ -133,7 +207,14 @@ found_plan=0
 for plan in "$DOCS_PLANS"/*.md; do
   [ -e "$plan" ] || continue
   found_plan=1
-  if ! grep -Fq "## Status" "$plan" || ! grep -Fq "Completed" "$plan"; then
+  completed_statuses=$(awk '
+    $0 == "## Status Completed" { count += 1; next }
+    $0 == "## Status" { in_status = 1; next }
+    in_status && /^## / { in_status = 0 }
+    in_status && $0 == "Completed" { count += 1 }
+    END { print count + 0 }
+  ' "$plan")
+  if [ "$completed_statuses" -ne 1 ]; then
     printf '%s\n' "$plan must record completed status." >&2
     exit 1
   fi
