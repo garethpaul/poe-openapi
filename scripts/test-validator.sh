@@ -110,8 +110,11 @@ assert_container_shape_rejected() {
 path, field_path, invalid_yaml = ARGV
 spec = YAML.safe_load(File.read(path), aliases: true)
 keys = field_path.split('.')
-container = keys[0...-1].reduce(spec) { |node, key| node.fetch(key) }
-container[keys.last] = YAML.safe_load(invalid_yaml, aliases: true)
+container = keys[0...-1].reduce(spec) do |node, key|
+  node.is_a?(Array) ? node.fetch(Integer(key)) : node.fetch(key)
+end
+replacement = YAML.safe_load(invalid_yaml, aliases: true)
+container.is_a?(Array) ? container[Integer(keys.last)] = replacement : container[keys.last] = replacement
 File.write(path, YAML.dump(spec))
 RUBY
   rm -f "$call_log"
@@ -142,6 +145,18 @@ assert_container_shape_rejected components components '[]' 'spec.yaml components
 assert_container_shape_rejected components.schemas components.schemas '[]' 'spec.yaml components.schemas must be a mapping'
 assert_container_shape_rejected components.securitySchemes components.securitySchemes '[]' 'spec.yaml components.securitySchemes must be a mapping'
 assert_container_shape_rejected servers servers 'invalid' 'spec.yaml servers must be an array'
+assert_container_shape_rejected info.contact info.contact '[]' 'spec.yaml info.contact must be a mapping'
+assert_container_shape_rejected info.license info.license '[]' 'spec.yaml info.license must be a mapping'
+assert_container_shape_rejected servers.0 servers.0 'invalid' 'spec.yaml servers[0] must be a mapping'
+assert_container_shape_rejected component.schema components.schemas.Error 'invalid' 'spec.yaml components.schemas.Error must be a mapping'
+assert_container_shape_rejected schema.properties components.schemas.SseConversionRequest.properties '[]' 'spec.yaml components.schemas.SseConversionRequest.properties must be a mapping'
+assert_container_shape_rejected schema.property components.schemas.SseConversionRequest.properties.contentType 'invalid' 'spec.yaml components.schemas.SseConversionRequest.properties.contentType must be a mapping'
+assert_container_shape_rejected security.scheme components.securitySchemes.ApiKeyAuth 'invalid' 'spec.yaml components.securitySchemes.ApiKeyAuth must be a mapping'
+assert_container_shape_rejected path.item paths./stream-to-poe '[]' 'spec.yaml path item /stream-to-poe must be an object'
+assert_container_shape_rejected operation paths./stream-to-poe.post 'invalid' 'POST /stream-to-poe operation must be an object'
+assert_container_shape_rejected requestBody paths./stream-to-poe.post.requestBody 'invalid' 'POST /stream-to-poe requestBody must be an object'
+assert_container_shape_rejected responses paths./stream-to-poe.post.responses '[]' 'POST /stream-to-poe responses must be an object'
+assert_container_shape_rejected response paths./stream-to-poe.post.responses.200 'invalid' 'POST /stream-to-poe 200 response must be an object'
 
 cp "$ROOT_DIR/spec.yaml" "$TMP_DIR/spec.yaml"
 ruby - "$TMP_DIR/spec.yaml" <<'RUBY'
