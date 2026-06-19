@@ -7,6 +7,7 @@ MAKEFILE="$ROOT_DIR/Makefile"
 GITIGNORE="$ROOT_DIR/.gitignore"
 VALIDATOR="$ROOT_DIR/scripts/validate-openapi.rb"
 DOCS_PLANS="$ROOT_DIR/docs/plans"
+PATH_ITEM_PLAN="$DOCS_PLANS/2026-06-13-path-item-metadata-validation.md"
 WORKFLOW="$ROOT_DIR/.github/workflows/check.yml"
 
 require_file() {
@@ -38,6 +39,7 @@ for path in \
   "docs/plans/2026-06-12-self-contained-reference-validation.md" \
   "docs/plans/2026-06-12-supported-ruby-matrix.md" \
   "docs/plans/2026-06-13-operation-id-validation.md" \
+  "docs/plans/2026-06-13-path-item-metadata-validation.md" \
   ".github/workflows/check.yml" \
   "scripts/check-baseline.sh"; do
   require_file "$path"
@@ -108,6 +110,14 @@ if ! grep -Fq "docs/plans/2026-06-12-supported-ruby-matrix.md" "$VALIDATOR"; the
 fi
 
 for validator_contract in \
+  "HTTP_METHODS = %w[get put post delete options head patch trace]" \
+  "PATH_ITEM_FIELDS" \
+  "next unless HTTP_METHODS.include?(method.to_s)" \
+  "unless path_item.is_a?(Hash)" \
+  "unless operation.is_a?(Hash)" \
+  "path item #{path} must be an object" \
+  "contains unsupported field" \
+  "operation must be an object" \
   "operationId must be a non-empty string" \
   "duplicate operationId values" \
   "response missing description" \
@@ -121,7 +131,33 @@ for validator_contract in \
   fi
 done
 
+for document in "$README" "$ROOT_DIR/SECURITY.md" "$ROOT_DIR/VISION.md" "$ROOT_DIR/CHANGES.md"; do
+  if ! grep -Fq "Path Item metadata" "$document"; then
+    printf '%s\n' "$document must document Path Item metadata validation." >&2
+    exit 1
+  fi
+done
+
+for evidence in \
+  "## Status" \
+  "Completed" \
+  "Ruby 2.7" \
+  "Ruby 3.3" \
+  "make check" \
+  "hostile mutations rejected" \
+  "git diff --check" \
+  "secret, captured-prompt, generated-artifact, specification, and dependency scan"; do
+  if ! grep -Fq "$evidence" "$PATH_ITEM_PLAN"; then
+    printf '%s\n' "Path Item validation plan must preserve completed evidence: $evidence" >&2
+    exit 1
+  fi
+done
+
 for mutation_contract in \
+  "standard Path Item metadata" \
+  "unsupported Path Item field" \
+  "non-object Path Item" \
+  "non-object operation" \
   "missing operation ID" \
   "whitespace-only operation ID" \
   "non-string operation ID" \

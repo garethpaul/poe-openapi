@@ -79,6 +79,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   generated docs explain how credentials are supplied.
 - Every OpenAPI operation must declare a non-empty operation-level security
   requirement that names a configured security scheme.
+- Standard OpenAPI Path Item metadata is accepted without being treated as an
+  operation; unknown fields and non-object path or operation shapes fail closed.
 - Every OpenAPI component schema and schema property must include a non-empty
   `description` so generated clients and readers retain payload and field-level
   semantics.

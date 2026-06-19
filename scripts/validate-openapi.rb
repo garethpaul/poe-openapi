@@ -23,8 +23,12 @@ PLANS = [
   'docs/plans/2026-06-12-response-description-validation.md',
   'docs/plans/2026-06-12-self-contained-reference-validation.md',
   'docs/plans/2026-06-12-supported-ruby-matrix.md',
-  'docs/plans/2026-06-13-operation-id-validation.md'
+  'docs/plans/2026-06-13-operation-id-validation.md',
+  'docs/plans/2026-06-13-path-item-metadata-validation.md'
 ].freeze
+
+HTTP_METHODS = %w[get put post delete options head patch trace].freeze
+PATH_ITEM_FIELDS = (HTTP_METHODS + %w[$ref summary description servers parameters]).freeze
 
 spec = YAML.safe_load(File.read('spec.yaml'), aliases: true)
 reference = File.read('spec.md')
@@ -219,9 +223,26 @@ validate_property_descriptions(spec, 'spec', errors)
 validate_required_properties(spec, 'spec', errors)
 validate_references(spec, spec, 'spec', errors)
 
-paths.each do |path, methods|
-  methods.each do |method, operation|
+paths.each do |path, path_item|
+  unless path_item.is_a?(Hash)
+    errors << "spec.yaml path item #{path} must be an object"
+    next
+  end
+
+  unsupported_fields = path_item.keys.map(&:to_s) - PATH_ITEM_FIELDS
+  unsupported_fields.each do |field|
+    errors << "spec.yaml path item #{path} contains unsupported field `#{field}`"
+  end
+
+  path_item.each do |method, operation|
+    next unless HTTP_METHODS.include?(method.to_s)
+
     method_name = method.to_s.upcase
+    unless operation.is_a?(Hash)
+      errors << "#{method_name} #{path} operation must be an object"
+      next
+    end
+
     operation_id = operation['operationId']
     documented_operation_id = documented_operations[[path, method_name]]
 
@@ -313,7 +334,8 @@ paths.each do |path, methods|
 end
 
 documented_operations.each_key do |path, method_name|
-  next if paths.dig(path, method_name.downcase)
+  path_item = paths[path]
+  next if path_item.is_a?(Hash) && path_item[method_name.downcase].is_a?(Hash)
 
   errors << "spec.md documents #{method_name} #{path}, but spec.yaml has no matching operation"
 end

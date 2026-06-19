@@ -95,6 +95,57 @@ require 'yaml'
 
 path = ARGV.fetch(0)
 spec = YAML.safe_load(File.read(path), aliases: true)
+path_item = spec.fetch('paths').fetch('/stream-to-poe')
+path_item['summary'] = 'Shared stream conversion path'
+path_item['description'] = 'Metadata shared by operations under this path.'
+path_item['servers'] = [{ 'url' => 'https://api.example.com/v1' }]
+path_item['parameters'] = []
+File.write(path, YAML.dump(spec))
+RUBY
+if ! "$TMP_DIR/scripts/validate-openapi.rb" >/dev/null; then
+  printf '%s\n' "Validator rejected standard Path Item metadata." >&2
+  exit 1
+fi
+
+cp "$ROOT_DIR/spec.yaml" "$TMP_DIR/spec.yaml"
+ruby - "$TMP_DIR/spec.yaml" <<'RUBY'
+require 'yaml'
+
+path = ARGV.fetch(0)
+spec = YAML.safe_load(File.read(path), aliases: true)
+spec.fetch('paths').fetch('/stream-to-poe')['fetch'] = {}
+File.write(path, YAML.dump(spec))
+RUBY
+assert_rejected "unsupported Path Item field" 'path item /stream-to-poe contains unsupported field `fetch`'
+
+cp "$ROOT_DIR/spec.yaml" "$TMP_DIR/spec.yaml"
+ruby - "$TMP_DIR/spec.yaml" <<'RUBY'
+require 'yaml'
+
+path = ARGV.fetch(0)
+spec = YAML.safe_load(File.read(path), aliases: true)
+spec.fetch('paths')['/stream-to-poe'] = []
+File.write(path, YAML.dump(spec))
+RUBY
+assert_rejected "non-object Path Item" "path item /stream-to-poe must be an object"
+
+cp "$ROOT_DIR/spec.yaml" "$TMP_DIR/spec.yaml"
+ruby - "$TMP_DIR/spec.yaml" <<'RUBY'
+require 'yaml'
+
+path = ARGV.fetch(0)
+spec = YAML.safe_load(File.read(path), aliases: true)
+spec.fetch('paths').fetch('/stream-to-poe')['post'] = 'invalid'
+File.write(path, YAML.dump(spec))
+RUBY
+assert_rejected "non-object operation" "POST /stream-to-poe operation must be an object"
+
+cp "$ROOT_DIR/spec.yaml" "$TMP_DIR/spec.yaml"
+ruby - "$TMP_DIR/spec.yaml" <<'RUBY'
+require 'yaml'
+
+path = ARGV.fetch(0)
+spec = YAML.safe_load(File.read(path), aliases: true)
 spec['x-validation-reference'] = { '$ref' => '#/components/schemas/MissingSchema' }
 File.write(path, YAML.dump(spec))
 RUBY
