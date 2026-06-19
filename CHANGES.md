@@ -2,6 +2,9 @@
 
 ## 2026-06-13
 
+- Added deterministic, dependency-free `spec.md` generation from `spec.yaml`,
+  with byte-for-byte drift checks and mutation coverage across represented API
+  metadata, operations, request fields, responses, security, and errors.
 - Accepted standard OpenAPI Path Item metadata without treating it as an HTTP
   operation and added stable errors for unsupported or non-object structures.
 - Strengthened operation ID validation to reject missing, blank, and

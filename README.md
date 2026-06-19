@@ -47,7 +47,9 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 ## Running or Using the Project
 
 - Read `spec.yaml` as the source OpenAPI contract.
-- Read `spec.md` as the human-oriented endpoint reference.
+- Read generated `spec.md` as the human-oriented endpoint reference.
+- Run `make generate` after changing `spec.yaml`; do not edit `spec.md`
+  directly.
 
 ## Testing and Verification
 
@@ -58,6 +60,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   while enforcing the complete workflow contract.
 - Run `make build` for the static OpenAPI contract build gate; it uses the same
   dependency-free validator as `make lint`.
+- Run `make generate` to deterministically regenerate `spec.md` from
+  `spec.yaml`. The validator rejects any byte-level generated-reference drift.
 - Run `scripts/check-baseline.sh` for the repository baseline guard.
 - `scripts/validate-openapi.rb` resolves repository inputs from its own
   location, so it can be invoked from any working directory.

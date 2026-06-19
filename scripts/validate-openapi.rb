@@ -24,7 +24,8 @@ PLANS = [
   'docs/plans/2026-06-12-self-contained-reference-validation.md',
   'docs/plans/2026-06-12-supported-ruby-matrix.md',
   'docs/plans/2026-06-13-operation-id-validation.md',
-  'docs/plans/2026-06-13-path-item-metadata-validation.md'
+  'docs/plans/2026-06-13-path-item-metadata-validation.md',
+  'docs/plans/2026-06-13-generated-markdown-spec.md'
 ].freeze
 
 HTTP_METHODS = %w[get put post delete options head patch trace].freeze
@@ -33,6 +34,11 @@ PATH_ITEM_FIELDS = (HTTP_METHODS + %w[$ref summary description servers parameter
 spec = YAML.safe_load(File.read('spec.yaml'), aliases: true)
 reference = File.read('spec.md')
 errors = []
+
+generator = File.join(ROOT_DIR, 'scripts/generate-spec-md.rb')
+unless File.file?(generator) && system(generator, '--check', out: File::NULL, err: File::NULL)
+  errors << 'spec.md must match scripts/generate-spec-md.rb output'
+end
 
 def validate_property_descriptions(node, path, errors)
   case node
