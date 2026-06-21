@@ -17,6 +17,7 @@ GRAPH_WALKER_PLAN="$DOCS_PLANS/2026-06-16-yaml-graph-walker-depth.md"
 DOCUMENT_ROOT_PLAN="$DOCS_PLANS/2026-06-17-yaml-document-root-validation.md"
 CONTAINER_SHAPE_PLAN="$DOCS_PLANS/2026-06-17-openapi-container-shape-validation.md"
 LOCATION_INDEPENDENT_MAKE_PLAN="$DOCS_PLANS/2026-06-14-location-independent-make.md"
+SAFE_MAKE_ROOT_PLAN="$DOCS_PLANS/2026-06-20-safe-make-root.md"
 WORKFLOW="$ROOT_DIR/.github/workflows/check.yml"
 
 require_file() {
@@ -59,8 +60,10 @@ for path in \
   "docs/plans/2026-06-17-yaml-document-root-validation.md" \
   "docs/plans/2026-06-17-openapi-container-shape-validation.md" \
   "docs/plans/2026-06-14-location-independent-make.md" \
+  "docs/plans/2026-06-20-safe-make-root.md" \
   ".github/workflows/check.yml" \
-  "scripts/check-baseline.sh"; do
+  "scripts/check-baseline.sh" \
+  "scripts/test-makefile-root.sh"; do
   require_file "$path"
 done
 
@@ -84,7 +87,12 @@ if ! [ -x "$ROOT_DIR/scripts/test-validator.sh" ]; then
   exit 1
 fi
 
-for target in "generate:" "lint:" "test:" "build:" "verify:" "check:"; do
+if ! [ -x "$ROOT_DIR/scripts/test-makefile-root.sh" ]; then
+  printf '%s\n' "scripts/test-makefile-root.sh must be executable." >&2
+  exit 1
+fi
+
+for target in "generate:" "lint:" "test:" "build:" "root-test:" "verify:" "check:"; do
   if ! grep -Fq "$target" "$MAKEFILE"; then
     printf '%s\n' "Makefile must expose the $target gate." >&2
     exit 1
@@ -92,15 +100,67 @@ for target in "generate:" "lint:" "test:" "build:" "verify:" "check:"; do
 done
 
 for make_contract in \
-  'override REPO_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))' \
-  'generate: $(REPO_ROOT)/scripts/generate-spec-md.rb $(REPO_ROOT)/spec.yaml' \
-  'cd "$(REPO_ROOT)" && scripts/check-baseline.sh' \
-  'cd "$(REPO_ROOT)" && scripts/generate-spec-md.rb' \
-  'cd "$(REPO_ROOT)" && scripts/validate-openapi.rb' \
-  'cd "$(REPO_ROOT)" && scripts/test-validator.sh' \
-  'cd "$(REPO_ROOT)" && scripts/test-generator.sh'; do
+  'override SHELL := /bin/sh' \
+  'override .SHELLFLAGS := -eu -c' \
+  '$(error MAKEFILES must be empty; repository verification requires this Makefile to be loaded alone)' \
+  'override MAKEFILES :=' \
+  '$(error MAKEFILE_LIST must not be overridden)' \
+  'override REPOSITORY_MAKEFILE := $(value MAKEFILE_LIST)' \
+  'export REPOSITORY_MAKEFILE' \
+  'override REPO_ROOT :=' \
+  'override RUBY := ruby' \
+  'override define RUN_IN_REPO' \
+  'makefile=$${REPOSITORY_MAKEFILE# };' \
+  'REPO_ROOT=$$(CDPATH= cd -- "$$repo_directory" && pwd -P);' \
+  'export REPO_ROOT;' \
+  'cd "$$REPO_ROOT" &&' \
+  '$(RUN_IN_REPO) scripts/check-baseline.sh' \
+  '$(RUN_IN_REPO) $(RUBY) scripts/generate-spec-md.rb' \
+  '$(RUN_IN_REPO) $(RUBY) scripts/validate-openapi.rb' \
+  '$(RUN_IN_REPO) scripts/test-validator.sh' \
+  '$(RUN_IN_REPO) scripts/test-generator.sh' \
+  '$(RUN_IN_REPO) scripts/test-makefile-root.sh' \
+  'verify: lint test build root-test'; do
   if ! grep -Fq "$make_contract" "$MAKEFILE"; then
     printf '%s\n' "Makefile must remain caller-directory independent: $make_contract" >&2
+    exit 1
+  fi
+done
+
+for forbidden_make_contract in \
+  '$(shell' \
+  '$(eval' \
+  'cd "$(REPO_ROOT)"'; do
+  if grep -Fq "$forbidden_make_contract" "$MAKEFILE"; then
+    printf '%s\n' "Makefile must not reparse repository path data: $forbidden_make_contract" >&2
+    exit 1
+  fi
+done
+
+for root_test_contract in \
+  'Poe OpenAPI' \
+  'POE_OPENAPI_BACKTICK_MARKER' \
+  'caller-controlled SHELL was executed' \
+  'caller-controlled RUBY was executed' \
+  '77 executed target/authority cases' \
+  '2 MAKEFILE_LIST rejections' \
+  '1 detected MAKEFILES preload rejection'; do
+  if ! grep -Fq "$root_test_contract" "$ROOT_DIR/scripts/test-makefile-root.sh"; then
+    printf '%s\n' "Makefile root test must preserve: $root_test_contract" >&2
+    exit 1
+  fi
+done
+
+for evidence in \
+  '## Status Completed' \
+  'environment data' \
+  'backtick' \
+  'MAKEFILES' \
+  'SHELL' \
+  'RUBY' \
+  'make check'; do
+  if ! grep -Fq "$evidence" "$SAFE_MAKE_ROOT_PLAN"; then
+    printf '%s\n' "Safe Make root plan must preserve evidence: $evidence" >&2
     exit 1
   fi
 done

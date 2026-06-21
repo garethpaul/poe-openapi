@@ -1,5 +1,15 @@
 # Changes
 
+## 2026-06-20
+
+- Bound every Make quality gate to the canonical checked-in repository root as
+  environment data, preventing checkout-path shell command execution.
+- Pinned shell and Ruby command-variable authority and rejected direct
+  `MAKEFILE_LIST`, root, shell, interpreter, and detected preload overrides.
+- Added executable hostile-path and Make authority regressions to `make check`.
+- Documented GNU Make's pre-load trust boundary for extra Makefiles and
+  dollar-sign Make expressions embedded in a `-f` path.
+
 ## 2026-06-17
 
 - Added stable validator and generator diagnostics for malformed top-level container shapes
