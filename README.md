@@ -68,6 +68,20 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 - Run `make generate` to deterministically regenerate `spec.md` from
   `spec.yaml`. The validator rejects any byte-level generated-reference drift.
 - Run `scripts/check-baseline.sh` for the repository baseline guard.
+- Run `make root-test` to execute the Make authority boundary regression from
+  a checkout path containing spaces, quotes, apostrophes, and backticks. The
+  gate rejects caller-controlled roots, shells, Ruby command variables, and
+  detected Makefile preloads before repository quality commands run.
+- The canonical repository root is exported as environment data and recipes
+  read it as `$$REPO_ROOT`; it is never interpolated into shell source.
+- The supported security boundary assumes this checked-in Makefile is the only
+  explicit Makefile. GNU Make parses caller-supplied `MAKEFILES` and later `-f`
+  files as executable code, so a Makefile cannot sandbox or reliably reject a
+  malicious extra Makefile after that code has already run.
+- GNU Make also expands Make expressions in a `-f` filename before this
+  Makefile runs. Checkout paths containing dollar-sign Make expressions such as
+  `$(shell command)` are therefore unsupported; no rule in the repository can
+  reject them before GNU Make evaluates them.
 - `scripts/validate-openapi.rb` resolves repository inputs from its own
   location, so it can be invoked from any working directory.
 - The verification gate parses `spec.yaml` and checks endpoint, operation ID,
