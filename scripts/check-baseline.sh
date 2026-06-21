@@ -58,9 +58,11 @@ for path in \
   "docs/plans/2026-06-16-yaml-graph-walker-depth.md" \
   "docs/plans/2026-06-17-yaml-document-root-validation.md" \
   "docs/plans/2026-06-17-openapi-container-shape-validation.md" \
+  "docs/plans/2026-06-21-safe-make-root.md" \
   "docs/plans/2026-06-14-location-independent-make.md" \
   ".github/workflows/check.yml" \
-  "scripts/check-baseline.sh"; do
+  "scripts/check-baseline.sh" \
+  "scripts/test-makefile-root.sh"; do
   require_file "$path"
 done
 
@@ -84,7 +86,7 @@ if ! [ -x "$ROOT_DIR/scripts/test-validator.sh" ]; then
   exit 1
 fi
 
-for target in "generate:" "lint:" "test:" "build:" "verify:" "check:"; do
+for target in "generate:" "lint:" "test:" "build:" "root-test:" "verify:" "check:"; do
   if ! grep -Fq "$target" "$MAKEFILE"; then
     printf '%s\n' "Makefile must expose the $target gate." >&2
     exit 1
@@ -92,8 +94,15 @@ for target in "generate:" "lint:" "test:" "build:" "verify:" "check:"; do
 done
 
 for make_contract in \
-  'override REPO_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))' \
-  'generate: $(REPO_ROOT)/scripts/generate-spec-md.rb $(REPO_ROOT)/spec.yaml' \
+  'ifneq ($(origin MAKEFILE_LIST),file)' \
+  '$(error MAKEFILE_LIST must not be overridden)' \
+  'override REPO_ROOT := $(shell path=' \
+  '/usr/bin/dirname' \
+  '/bin/pwd -P' \
+  'root-test:' \
+  'cd "$(REPO_ROOT)" && scripts/test-makefile-root.sh' \
+  'verify: lint test build root-test' \
+  'generate:' \
   'cd "$(REPO_ROOT)" && scripts/check-baseline.sh' \
   'cd "$(REPO_ROOT)" && scripts/generate-spec-md.rb' \
   'cd "$(REPO_ROOT)" && scripts/validate-openapi.rb' \
@@ -101,6 +110,17 @@ for make_contract in \
   'cd "$(REPO_ROOT)" && scripts/test-generator.sh'; do
   if ! grep -Fq "$make_contract" "$MAKEFILE"; then
     printf '%s\n' "Makefile must remain caller-directory independent: $make_contract" >&2
+    exit 1
+  fi
+done
+
+for root_test_contract in \
+  'Poe OpenAPI' \
+  '21 target/override cases' \
+  '2 MAKEFILE_LIST rejection cases' \
+  'MAKEFILE_LIST must not be overridden'; do
+  if ! grep -Fq "$root_test_contract" "$ROOT_DIR/scripts/test-makefile-root.sh"; then
+    printf '%s\n' "Makefile root test must preserve: $root_test_contract" >&2
     exit 1
   fi
 done

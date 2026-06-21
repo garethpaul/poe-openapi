@@ -1,11 +1,14 @@
-.PHONY: check generate lint test build verify
+.PHONY: check generate lint test build root-test verify
 
-override REPO_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
+ifneq ($(origin MAKEFILE_LIST),file)
+$(error MAKEFILE_LIST must not be overridden)
+endif
+override REPO_ROOT := $(shell path='$(subst ','"'"',$(MAKEFILE_LIST))'; path=$$(printf '%s' "$$path" | /usr/bin/sed 's/^ //'); directory=$$(/usr/bin/dirname -- "$$path"); CDPATH= cd -- "$$directory" && /bin/pwd -P)
 
 check: verify
 	cd "$(REPO_ROOT)" && scripts/check-baseline.sh
 
-generate: $(REPO_ROOT)/scripts/generate-spec-md.rb $(REPO_ROOT)/spec.yaml
+generate:
 	cd "$(REPO_ROOT)" && scripts/generate-spec-md.rb
 
 lint:
@@ -17,4 +20,7 @@ test: lint
 
 build: lint
 
-verify: lint test build
+root-test:
+	cd "$(REPO_ROOT)" && scripts/test-makefile-root.sh
+
+verify: lint test build root-test

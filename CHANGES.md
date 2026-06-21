@@ -1,5 +1,10 @@
 # Changes
 
+## 2026-06-21
+
+- Hardened all seven Make gates against `MAKEFILE_LIST` and `REPO_ROOT`
+  redirection without changing the OpenAPI or generated Markdown contract.
+
 ## 2026-06-17
 
 - Added stable validator and generator diagnostics for malformed top-level container shapes
