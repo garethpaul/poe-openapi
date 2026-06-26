@@ -30,7 +30,8 @@ PLANS = [
   'docs/plans/2026-06-15-yaml-parser-recursion-guard.md',
   'docs/plans/2026-06-16-yaml-graph-walker-depth.md',
   'docs/plans/2026-06-17-yaml-document-root-validation.md',
-  'docs/plans/2026-06-17-openapi-container-shape-validation.md'
+  'docs/plans/2026-06-17-openapi-container-shape-validation.md',
+  'docs/plans/2026-06-26-openapi31-nullability.md'
 ].freeze
 
 HTTP_METHODS = %w[get put post delete options head patch trace].freeze
@@ -260,6 +261,46 @@ def validate_required_properties(root, root_path, errors)
   end
 end
 
+def validate_openapi_31_keywords(root, root_path, errors)
+  each_graph_node(root, root_path) do |node, path|
+    next unless node.is_a?(Hash) && node.key?('nullable')
+
+    errors << "spec.yaml schema #{path} uses removed OpenAPI 3.0 keyword `nullable`"
+  end
+end
+
+def validate_openapi_31_operation_schemas(paths, errors)
+  paths.each do |path, path_item|
+    next unless path_item.is_a?(Hash)
+
+    path_item.each do |method, operation|
+      next unless HTTP_METHODS.include?(method.to_s) && operation.is_a?(Hash)
+
+      method_path = "spec.paths.#{path}.#{method}"
+      request_content = operation.dig('requestBody', 'content')
+      if request_content.is_a?(Hash)
+        request_content.each do |media_type, media|
+          schema = media['schema'] if media.is_a?(Hash)
+          validate_openapi_31_keywords(schema, "#{method_path}.requestBody.content.#{media_type}.schema", errors) if schema.is_a?(Hash)
+        end
+      end
+
+      responses = operation['responses']
+      next unless responses.is_a?(Hash)
+
+      responses.each do |status, response|
+        content = response['content'] if response.is_a?(Hash)
+        next unless content.is_a?(Hash)
+
+        content.each do |media_type, media|
+          schema = media['schema'] if media.is_a?(Hash)
+          validate_openapi_31_keywords(schema, "#{method_path}.responses.#{status}.content.#{media_type}.schema", errors) if schema.is_a?(Hash)
+        end
+      end
+    end
+  end
+end
+
 def resolve_json_pointer(document, reference)
   return document if reference == '#'
   return unless reference.start_with?('#/')
@@ -398,6 +439,10 @@ end
 
 validate_property_descriptions(spec, 'spec', errors)
 validate_required_properties(spec, 'spec', errors)
+if spec.fetch('openapi', '').to_s.start_with?('3.1')
+  validate_openapi_31_keywords(schemas, 'spec.components.schemas', errors)
+  validate_openapi_31_operation_schemas(paths, errors)
+end
 validate_references(spec, spec, 'spec', errors)
 
 paths.each do |path, path_item|

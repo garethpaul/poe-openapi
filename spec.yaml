@@ -478,8 +478,9 @@ components:
                       description: Text extracted from the attachment, when available
                       example: "An image showing a mountain landscape"
               metadata:
-                type: string
-                nullable: true
+                type:
+                  - string
+                  - "null"
                 description: Arbitrary data set by a server bot
         message_id:
           description: Identifier for the Poe query message
@@ -492,8 +493,9 @@ components:
           $ref: '#/components/schemas/Identifier'
         metadata:
           description: Identifier for server bot metadata associated with the query
-          $ref: '#/components/schemas/Identifier'
-          nullable: true
+          anyOf:
+            - $ref: '#/components/schemas/Identifier'
+            - type: "null"
         temperature:
           type: number
           format: float

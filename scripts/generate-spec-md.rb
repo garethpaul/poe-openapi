@@ -43,7 +43,15 @@ end
 def schema_type(schema)
   return schema.fetch('$ref').split('/').last if schema.key?('$ref')
 
-  type = schema.fetch('type', 'value').to_s
+  alternatives = schema['anyOf']
+  if alternatives.is_a?(Array)
+    return alternatives.map { |alternative| schema_type(alternative) }.uniq.join(' or ')
+  end
+
+  type_value = schema.fetch('type', 'value')
+  return type_value.map(&:to_s).uniq.join(' or ') if type_value.is_a?(Array)
+
+  type = type_value.to_s
   return type unless type == 'array'
 
   "array of #{schema_type(schema.fetch('items', {}))}"

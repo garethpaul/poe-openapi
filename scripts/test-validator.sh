@@ -455,4 +455,28 @@ if ! "$TMP_DIR/scripts/validate-openapi.rb" >/dev/null; then
   exit 1
 fi
 
+cp "$ROOT_DIR/spec.yaml" "$TMP_DIR/spec.yaml"
+ruby - "$TMP_DIR/spec.yaml" <<'RUBY'
+require 'yaml'
+
+path = ARGV.fetch(0)
+spec = YAML.safe_load(File.read(path), aliases: true)
+spec.fetch('components').fetch('schemas').fetch('Error').fetch('properties').fetch('message')['nullable'] = true
+File.write(path, YAML.dump(spec))
+RUBY
+assert_rejected "OpenAPI 3.0 nullable keyword" 'uses removed OpenAPI 3.0 keyword `nullable`'
+
+cp "$ROOT_DIR/spec.yaml" "$TMP_DIR/spec.yaml"
+ruby - "$TMP_DIR/spec.yaml" <<'RUBY'
+require 'yaml'
+
+path = ARGV.fetch(0)
+spec = YAML.safe_load(File.read(path), aliases: true)
+schema = spec.fetch('paths').fetch('/poe/report-reaction').fetch('post').fetch('responses').fetch('200')
+             .fetch('content').fetch('application/json').fetch('schema')
+schema['nullable'] = true
+File.write(path, YAML.dump(spec))
+RUBY
+assert_rejected "inline OpenAPI 3.0 nullable keyword" 'uses removed OpenAPI 3.0 keyword `nullable`'
+
 printf '%s\n' "OpenAPI validator mutation tests passed."

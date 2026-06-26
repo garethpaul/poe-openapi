@@ -4,6 +4,8 @@ Generator parser recursion failures produce one stable diagnostic before
 `spec.md` can be replaced. Loaded YAML graphs use bounded iterative validation
 so deep acyclic aliases cannot exhaust the Ruby call stack. Both entry points
 also validate core top-level container shapes before generation or traversal.
+OpenAPI 3.1 nullability uses JSON Schema unions; the validator rejects the
+removed OpenAPI 3.0 `nullable` keyword in component and inline operation schemas.
 
 <!-- README-OVERVIEW-IMAGE -->
 ![Project overview](docs/readme-overview.svg)
