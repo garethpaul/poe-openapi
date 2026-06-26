@@ -69,7 +69,7 @@ This API acts as an adapter between Server-Sent Events (SSE) and the Poe Protoco
   - `message_id` (Identifier, required): Identifier for the Poe query message
   - `user_id` (Identifier, required): Identifier for the Poe user
   - `conversation_id` (Identifier, required): Identifier for the Poe conversation
-  - `metadata` (Identifier, optional): Identifier for server bot metadata associated with the query
+  - `metadata` (Identifier or null, optional): Identifier for server bot metadata associated with the query
   - `temperature` (number, optional): Temperature for the LLM
   - `skip_system_prompt` (boolean, optional): Whether to skip the system prompt
   - `stop_sequences` (array of string, optional): Sequences that should stop the LLM response

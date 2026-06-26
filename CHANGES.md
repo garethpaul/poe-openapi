@@ -1,5 +1,27 @@
 # Changes
 
+## 2026-06-26 12:17 PDT - P1 - Restore OpenAPI 3.1 nullability semantics
+
+- **Priority:** P1 compatibility; two request fields used the removed OpenAPI
+  3.0 `nullable` keyword even though the document declares OpenAPI 3.1.
+- **Summary:** express nullable strings and identifiers with JSON Schema unions,
+  render union types in generated Markdown, and reject future `nullable` usage
+  in component and inline request/response schemas.
+- **Files:** `spec.yaml`, generated `spec.md`, `scripts/validate-openapi.rb`,
+  `scripts/generate-spec-md.rb`, validator/generator tests, baseline contracts,
+  maintainer docs, and
+  `docs/plans/2026-06-26-openapi31-nullability.md`.
+- **Tests:** red component and inline mutations now pass; Ruby 3.4.9 and 4.0.5
+  `make check` passed in disposable official images, and the absolute Makefile
+  gate passed from `/tmp`. Final hostile mutations restoring `nullable` and
+  removing union rendering were rejected.
+- **Findings:** the wire contract remains additive and backward compatible:
+  values already documented as nullable are now represented in the 3.1 schema
+  vocabulary that generators understand.
+- **Blockers:** Codex review may be unavailable because the local reviewer has
+  repeatedly returned HTTP 401; if so, skip it once as authorized.
+- **Next action:** open a PR and merge only the exact hosted-green head.
+
 ## 2026-06-20
 
 - Bound every Make quality gate to the canonical checked-in repository root as

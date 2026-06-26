@@ -31,6 +31,8 @@ Priority:
 - Keep optional top-level request properties documented in the Markdown
   reference
 - Keep OpenAPI schema `required` lists aligned with declared properties
+- Keep OpenAPI 3.1 schemas free of the removed 3.0 `nullable` keyword and render
+  JSON Schema null unions accurately in generated Markdown
 - Keep documented response status codes aligned with the OpenAPI contract
 - Keep operation IDs string-valued, non-empty, unique, and aligned with the
   Markdown endpoint reference

@@ -116,6 +116,7 @@ for contract in \
   '- **Endpoint**: `/stream-to-poe`' \
   '- **Operation ID**: `convertSseToPoe`' \
   '`sseUrl` (string, required)' \
+  '`metadata` (Identifier or null, optional)' \
   '- `404`: SSE stream not found' \
   '**`ApiKeyAuth`**' \
   '"details"'; do

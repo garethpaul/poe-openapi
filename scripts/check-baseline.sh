@@ -18,6 +18,7 @@ DOCUMENT_ROOT_PLAN="$DOCS_PLANS/2026-06-17-yaml-document-root-validation.md"
 CONTAINER_SHAPE_PLAN="$DOCS_PLANS/2026-06-17-openapi-container-shape-validation.md"
 LOCATION_INDEPENDENT_MAKE_PLAN="$DOCS_PLANS/2026-06-14-location-independent-make.md"
 SAFE_MAKE_ROOT_PLAN="$DOCS_PLANS/2026-06-20-safe-make-root.md"
+NULLABILITY_PLAN="$DOCS_PLANS/2026-06-26-openapi31-nullability.md"
 WORKFLOW="$ROOT_DIR/.github/workflows/check.yml"
 
 require_file() {
@@ -61,10 +62,69 @@ for path in \
   "docs/plans/2026-06-17-openapi-container-shape-validation.md" \
   "docs/plans/2026-06-14-location-independent-make.md" \
   "docs/plans/2026-06-20-safe-make-root.md" \
+  "docs/plans/2026-06-26-openapi31-nullability.md" \
   ".github/workflows/check.yml" \
   "scripts/check-baseline.sh" \
   "scripts/test-makefile-root.sh"; do
   require_file "$path"
+done
+
+if grep -Fq 'nullable:' "$ROOT_DIR/spec.yaml"; then
+  printf '%s\n' 'OpenAPI 3.1 schemas must not use the removed nullable keyword.' >&2
+  exit 1
+fi
+
+for nullability_contract in \
+  'def validate_openapi_31_keywords(root, root_path, errors)' \
+  'def validate_openapi_31_operation_schemas(paths, errors)' \
+  'uses removed OpenAPI 3.0 keyword `nullable`' \
+  "validate_openapi_31_keywords(schemas, 'spec.components.schemas', errors)" \
+  'validate_openapi_31_operation_schemas(paths, errors)'; do
+  if ! grep -Fq "$nullability_contract" "$VALIDATOR"; then
+    printf '%s\n' "OpenAPI 3.1 nullability validation must retain: $nullability_contract" >&2
+    exit 1
+  fi
+done
+
+for generator_contract in \
+  "alternatives = schema['anyOf']" \
+  'type_value.is_a?(Array)' \
+  '`metadata` (Identifier or null, optional)'; do
+  if ! grep -Fq "$generator_contract" "$GENERATOR" &&
+     ! grep -Fq "$generator_contract" "$ROOT_DIR/scripts/test-generator.sh"; then
+    printf '%s\n' "Generated null-union documentation must retain: $generator_contract" >&2
+    exit 1
+  fi
+done
+
+for validator_fixture in \
+  'OpenAPI 3.0 nullable keyword' \
+  'inline OpenAPI 3.0 nullable keyword'; do
+  if ! grep -Fq "$validator_fixture" "$ROOT_DIR/scripts/test-validator.sh"; then
+    printf '%s\n' "OpenAPI 3.1 nullable fixtures must retain: $validator_fixture" >&2
+    exit 1
+  fi
+done
+
+for document in "$ROOT_DIR/AGENTS.md" "$README" "$ROOT_DIR/SECURITY.md" "$ROOT_DIR/VISION.md" "$ROOT_DIR/CHANGES.md"; do
+  if ! grep -Fqi 'OpenAPI 3.1' "$document" || ! grep -Fqi 'nullable' "$document"; then
+    printf '%s\n' "$document must document the OpenAPI 3.1 nullability boundary." >&2
+    exit 1
+  fi
+done
+
+for plan_contract in \
+  '## Status Completed' \
+  'JSON Schema unions' \
+  'Ruby 3.4.9' \
+  'Ruby 4.0.5' \
+  'external-directory `make check`' \
+  'hostile mutations' \
+  'git diff --check'; do
+  if ! grep -Fq "$plan_contract" "$NULLABILITY_PLAN"; then
+    printf '%s\n' "OpenAPI 3.1 nullability plan must preserve: $plan_contract" >&2
+    exit 1
+  fi
 done
 
 if ! [ -x "$VALIDATOR" ]; then
@@ -493,8 +553,8 @@ for graph_walker_contract in \
     exit 1
   fi
 done
-if [ "$(grep -Fc 'each_graph_node(root, root_path) do |node, path|' "$VALIDATOR")" -ne 3 ]; then
-  printf '%s\n' 'All three whole-document validators must use the bounded graph walker.' >&2
+if [ "$(grep -Fc 'each_graph_node(root, root_path) do |node, path|' "$VALIDATOR")" -ne 4 ]; then
+  printf '%s\n' 'All four graph validators must use the bounded graph walker.' >&2
   exit 1
 fi
 for fixture_contract in \

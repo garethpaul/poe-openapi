@@ -43,6 +43,7 @@
 
 - The scan found credential-adjacent names. Review configuration paths before running against real accounts.
 - Keep every operation's security requirement and referenced security scheme aligned between `spec.yaml` and `spec.md`.
+- Because the contract declares OpenAPI 3.1, express nullability with JSON Schema unions and never restore the removed OpenAPI 3.0 `nullable` keyword.
 - See `SECURITY.md` for vulnerability reporting and safe research guidance.
 - See `VISION.md` for project direction and contribution guardrails.
 - See `CHANGES.md` for maintenance history.
